@@ -13,17 +13,42 @@ import {
 } from "lucide-react";
 import { websiteData } from "@/data/websiteData";
 
+export interface BlogSection {
+  id?: string;
+  heading?: string;
+  title?: string;
+  paragraphs?: string[];
+  image?: unknown;
+}
+
+export interface BlogItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  url?: string;
+  image?: unknown;
+  youtubeUrl?: string;
+  tags?: string[];
+  author?: string;
+  category?: string;
+  content?: {
+    introduction?: string[];
+    sections?: BlogSection[];
+  };
+}
+
 interface BlogsViewProps {
   onNavigateTab?: (tab: string) => void;
 }
 
 export default function BlogsView({}: BlogsViewProps) {
-  const initialBlogs = websiteData.blogs.items || [];
-  const [blogsList, setBlogsList] = useState<any[]>(initialBlogs);
+  const initialBlogs = (websiteData.blogs.items || []) as BlogItem[];
+  const [blogsList, setBlogsList] = useState<BlogItem[]>(initialBlogs);
   const [search, setSearch] = useState("");
-  const [selectedBlog, setSelectedBlog] = useState<any>(null);
+  const [selectedBlog, setSelectedBlog] = useState<BlogItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<any>(null);
+  const [editingBlog, setEditingBlog] = useState<BlogItem | null>(null);
 
   const [newArticleForm, setNewArticleForm] = useState({
     title: "",
@@ -137,7 +162,7 @@ export default function BlogsView({}: BlogsViewProps) {
     });
   };
 
-  const handleOpenEdit = (blog: any) => {
+  const handleOpenEdit = (blog: BlogItem) => {
     const rawIntro = blog.content?.introduction?.join("\n\n") || "";
     const firstSection = blog.content?.sections?.[0];
     const rawSectionHeading = firstSection?.heading || "";
@@ -191,7 +216,7 @@ export default function BlogsView({}: BlogsViewProps) {
             sections: editBlogForm.sectionHeading
               ? [
                   {
-                    id: firstSectionId(b),
+                    id: b.content?.sections?.[0]?.id || `sec-${Date.now()}`,
                     heading: editBlogForm.sectionHeading,
                     paragraphs:
                       sectionParagraphs.length > 0
@@ -209,10 +234,6 @@ export default function BlogsView({}: BlogsViewProps) {
 
     setBlogsList(updatedBlogs);
     setEditingBlog(null);
-  };
-
-  const firstSectionId = (b: any) => {
-    return b.content?.sections?.[0]?.id || `sec-${Date.now()}`;
   };
 
   return (

@@ -16,6 +16,18 @@ const ThemeContext = React.createContext<ThemeContextType>({
   setTheme: () => {},
 });
 
+function applyTheme(t: Theme) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  if (t === "dark") {
+    root.classList.add("dark");
+    root.classList.remove("light");
+  } else {
+    root.classList.remove("dark");
+    root.classList.add("light");
+  }
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
@@ -32,6 +44,7 @@ export function ThemeProvider({
     try {
       const stored = localStorage.getItem("emperorakbar_theme") as Theme | null;
       if (stored === "light" || stored === "dark") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setThemeState(stored);
         applyTheme(stored);
       } else {
@@ -41,17 +54,6 @@ export function ThemeProvider({
       applyTheme(defaultTheme);
     }
   }, [defaultTheme]);
-
-  const applyTheme = (t: Theme) => {
-    const root = document.documentElement;
-    if (t === "dark") {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.remove("dark");
-      root.classList.add("light");
-    }
-  };
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

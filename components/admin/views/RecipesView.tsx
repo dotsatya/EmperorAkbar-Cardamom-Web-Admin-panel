@@ -17,19 +17,68 @@ import {
 } from "lucide-react";
 import { websiteData } from "@/data/websiteData";
 
+export interface RecipeIngredient {
+  name: string;
+  quantity: string;
+}
+
+export interface RecipeIngredientGroup {
+  id?: string;
+  title?: string;
+  items?: string[];
+  ingredients?: RecipeIngredient[];
+}
+
+export interface RecipeStepItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  instructions?: string[];
+}
+
+export interface RecipeItem {
+  id: string;
+  title: string;
+  slug?: string;
+  image?: unknown;
+  category?: string;
+  cookTime?: string;
+  prepTime?: string;
+  servings?: string;
+  author?: string;
+  difficulty?: string;
+  description?: string;
+  tags?: string[];
+  content?: {
+    recipeInfo?: {
+      preparationTime?: string;
+      cookingTime?: string;
+      prepTime?: string;
+      cookTime?: string;
+      servings?: string;
+      difficulty?: string;
+      cuisine?: string;
+      category?: string;
+    };
+    ingredientGroups?: RecipeIngredientGroup[];
+    steps?: (string | RecipeStepItem)[];
+    introduction?: string[];
+  };
+}
+
 interface RecipesViewProps {
   onNavigateTab?: (tab: string) => void;
 }
 
 export default function RecipesView({}: RecipesViewProps) {
   // Source collaborative recipes from websiteData.ts with local additions
-  const initialRecipes = websiteData.recipes.items || [];
-  const [recipesList, setRecipesList] = useState<any[]>(initialRecipes);
+  const initialRecipes = (websiteData.recipes.items || []) as RecipeItem[];
+  const [recipesList, setRecipesList] = useState<RecipeItem[]>(initialRecipes);
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
-  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingRecipe, setEditingRecipe] = useState<any>(null);
+  const [editingRecipe, setEditingRecipe] = useState<RecipeItem | null>(null);
 
   // New Recipe Form state
   const [newRecipeForm, setNewRecipeForm] = useState({
@@ -66,7 +115,7 @@ export default function RecipesView({}: RecipesViewProps) {
   const filteredRecipes = recipesList.filter((r) => {
     const matchesSearch =
       r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.description.toLowerCase().includes(search.toLowerCase()) ||
+      (r.description?.toLowerCase() || "").includes(search.toLowerCase()) ||
       (r.tags && r.tags.some((t: string) => t.toLowerCase().includes(search.toLowerCase())));
 
     const matchesTag =
@@ -191,15 +240,15 @@ export default function RecipesView({}: RecipesViewProps) {
     });
   };
 
-  const handleOpenEdit = (recipe: any) => {
+  const handleOpenEdit = (recipe: RecipeItem) => {
     const rawIngs =
       recipe.content?.ingredientGroups
-        ?.flatMap((g: any) => g.ingredients?.map((i: any) => `${i.name} - ${i.quantity}`))
+        ?.flatMap((g: RecipeIngredientGroup) => g.ingredients?.map((i: RecipeIngredient) => `${i.name} - ${i.quantity}`) || [])
         .join("\n") || "";
 
     const rawSteps =
       recipe.content?.steps
-        ?.map((s: any) => s.description || (Array.isArray(s.instructions) ? s.instructions[0] : null) || s.title)
+        ?.map((s) => (typeof s === "string" ? s : s.description || (Array.isArray(s.instructions) ? s.instructions[0] : null) || s.title || ""))
         .join("\n") || "";
 
     setEditRecipeForm({
@@ -688,11 +737,11 @@ export default function RecipesView({}: RecipesViewProps) {
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   Ingredients:
                 </h4>
-                {selectedRecipe.content.ingredientGroups.map((group, idx: number) => (
+                {selectedRecipe.content.ingredientGroups.map((group: RecipeIngredientGroup, idx: number) => (
                   <div key={idx} className="bg-muted p-4 rounded-xl border border-border text-xs">
                     <h5 className="font-bold text-foreground mb-2 text-xs">{group.title}</h5>
                     <ul className="space-y-1.5 text-muted-foreground">
-                      {group.ingredients?.map((ing, iIdx: number) => (
+                      {group.ingredients?.map((ing: RecipeIngredient, iIdx: number) => (
                         <li key={iIdx} className="flex items-center justify-between">
                           <span>{ing.name}</span>
                           <span className="font-semibold text-foreground">{ing.quantity}</span>
@@ -710,23 +759,26 @@ export default function RecipesView({}: RecipesViewProps) {
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   Preparation Steps:
                 </h4>
-                {selectedRecipe.content.steps.map((step: { title?: string; description?: string; instructions?: string[] }, idx: number) => (
-                  <div key={idx} className="bg-muted p-4 rounded-xl border border-border text-xs">
-                    <h5 className="font-bold text-foreground mb-1.5">{step.title}</h5>
-                    {step.description && (
-                      <p className="text-muted-foreground leading-relaxed mb-2">
-                        {step.description}
-                      </p>
-                    )}
-                    {step.instructions && step.instructions.length > 0 && (
-                      <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-1">
-                        {step.instructions.map((inst: string, instIdx: number) => (
-                          <li key={instIdx}>{inst}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+                {selectedRecipe.content.steps.map((rawStep, idx: number) => {
+                  const step = typeof rawStep === "string" ? { title: `Step ${idx + 1}`, description: rawStep, instructions: [] } : rawStep;
+                  return (
+                    <div key={idx} className="bg-muted p-4 rounded-xl border border-border text-xs">
+                      <h5 className="font-bold text-foreground mb-1.5">{step.title}</h5>
+                      {step.description && (
+                        <p className="text-muted-foreground leading-relaxed mb-2">
+                          {step.description}
+                        </p>
+                      )}
+                      {step.instructions && step.instructions.length > 0 && (
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-1">
+                          {step.instructions.map((inst: string, instIdx: number) => (
+                            <li key={instIdx}>{inst}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 

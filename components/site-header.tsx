@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
@@ -11,7 +10,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { ExternalLink, CheckCircle, LogOut } from "lucide-react"
 import type { AdminTab } from "@/components/app-sidebar"
 
 const TAB_TITLES: Record<AdminTab, string> = {
@@ -35,16 +33,8 @@ export interface SiteHeaderProps {
 
 export function SiteHeader({
   currentTab = "dashboard",
-  ordersCount = 0,
-  onLogout,
 }: SiteHeaderProps) {
   const currentTitle = TAB_TITLES[currentTab] || "Admin Dashboard"
-
-  const handleLogoutClick = () => {
-    if (confirm("Are you sure you want to sign out from Emperor Akbar Admin Suite?")) {
-      onLogout?.()
-    }
-  }
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-4 lg:px-6 sticky top-0 z-30 transition-colors duration-200">

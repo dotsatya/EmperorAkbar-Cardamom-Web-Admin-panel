@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/sidebar"
 import {
   EllipsisVerticalIcon,
-  ShieldCheckIcon,
-  ExternalLinkIcon,
   LogOutIcon,
   CrownIcon,
 } from "lucide-react"

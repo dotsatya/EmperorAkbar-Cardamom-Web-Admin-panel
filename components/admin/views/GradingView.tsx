@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, Edit2 } from "lucide-react";
+import { Edit2 } from "lucide-react";
 
 export interface GradeItem {
   name: string;

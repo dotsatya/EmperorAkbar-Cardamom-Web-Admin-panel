@@ -29,9 +29,7 @@ import {
   HelpCircle,
   Settings,
   Database,
-  ExternalLink,
 } from "lucide-react"
-import ThemeToggle from "./admin/ThemeToggle/ThemeToggle"
 
 export type AdminTab =
   | "dashboard"
@@ -87,8 +85,8 @@ export function AppSidebar({
       title: "Customer Orders",
       icon: Package,
       isActive: currentTab === "orders",
-      // badge: ordersCount > 0 ? `${ordersCount} new` : null,
-      // badgeColor: "bg-[#d4af37] text-stone-900 font-bold",
+      badge: ordersCount > 0 ? `${ordersCount} new` : null,
+      badgeColor: "bg-[#d4af37] text-stone-900 font-bold",
       onClick: () => handleTabClick("orders"),
     },
     {

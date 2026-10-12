@@ -154,11 +154,7 @@ export default function AdminPage() {
       {/* Main Panel Inset */}
       <SidebarInset className="bg-background text-foreground min-h-screen flex flex-col transition-colors duration-200">
         {/* Dynamic Header with Breadcrumbs & Actions */}
-        <SiteHeader
-          currentTab={currentTab}
-          ordersCount={orders.filter((o) => o.status === "Pending").length}
-          onLogout={() => setIsAuthenticated(false)}
-        />
+        <SiteHeader currentTab={currentTab} />
 
         {/* Content Views */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">

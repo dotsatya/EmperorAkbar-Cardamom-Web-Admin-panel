@@ -5,34 +5,29 @@ import {
   ShoppingBag,
   Package,
   UtensilsCrossed,
-  FileText,
   IndianRupee,
   Clock,
   CheckCircle2,
   TrendingUp,
-  Plus,
   ArrowRight,
-  Sparkles,
   AlertTriangle,
 } from "lucide-react";
 import { UserOrder, WebsiteCMSData } from "@/lib/adminStore";
-import { AdminTab } from "../AdminSidebar";
+import { AdminTab } from "@/components/app-sidebar";
 import { websiteData } from "@/data/websiteData";
 
 interface DashboardViewProps {
   data: WebsiteCMSData;
   orders: UserOrder[];
   onNavigateTab: (tab: AdminTab) => void;
-  onOpenAddProduct: () => void;
-  onOpenAddRecipe: () => void;
+  onOpenAddProduct?: () => void;
+  onOpenAddRecipe?: () => void;
 }
 
 export default function DashboardView({
   data,
   orders,
   onNavigateTab,
-  onOpenAddProduct,
-  onOpenAddRecipe,
 }: DashboardViewProps) {
   const totalRevenue = orders.reduce((sum, o) => (o.status !== "Cancelled" ? sum + o.total : sum), 0);
   const pendingOrders = orders.filter((o) => o.status === "Pending").length;
