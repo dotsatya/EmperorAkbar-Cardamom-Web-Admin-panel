@@ -2,6 +2,9 @@
 
 A modern, high-performance web administration suite and client-side Content Management System (CMS) designed for the **Emperor Akbar Green Cardamom** e-commerce platform.
 
+🔗 **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/emperorakbar-web-admin-panel](https://dotsatya.github.io/emperorakbar-web-admin-panel)  
+📂 **GitHub Repository**: [https://github.com/dotsatya/emperorakbar-web-admin-panel](https://github.com/dotsatya/emperorakbar-web-admin-panel)
+
 Built with **Next.js 16**, **React 19**, **Tailwind CSS v4**, and **TypeScript**, styled in a luxury aesthetic featuring deep cardamom emerald and imperial gold accents, with full dark/light theme support.
 
 ---
@@ -163,6 +166,9 @@ emperorakbar-web-admin-panel/
 
 ---
 
-## 📄 License & Attribution
+## 👤 Author & Attribution
 
-Designed and developed for **Emperor Akbar Cardamom** (Samex India Pvt. Ltd.) as part of the Web Redesign Initiative by CodeWarrior Technologies. All rights reserved.
+* **Creator & Lead Developer**: Conceptualized, designed, and developed from A to Z entirely by **[Satya (dotsatya)](https://github.com/dotsatya)**.
+* **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/emperorakbar-web-admin-panel](https://dotsatya.github.io/emperorakbar-web-admin-panel)
+* **Source Code**: [https://github.com/dotsatya/emperorakbar-web-admin-panel](https://github.com/dotsatya/emperorakbar-web-admin-panel)
+* **Brand Assets & Media**: Product descriptions, official imagery, and branding belong to **Emperor Akbar Cardamom** (Samex India Pvt. Ltd.), utilized for development and design showcase purposes.
