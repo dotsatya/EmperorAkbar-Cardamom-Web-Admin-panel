@@ -41,7 +41,6 @@ export type AdminTab =
   | "health"
   | "faqs"
   | "settings"
-  | "backup"
 
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   currentTab?: AdminTab
@@ -77,7 +76,7 @@ export function AppSidebar({
       title: "Products & Pricing",
       icon: ShoppingBag,
       isActive: currentTab === "products",
-      badge: productsCount > 0 ? productsCount : null,
+      // badge: productsCount > 0 ? productsCount : null,
       onClick: () => handleTabClick("products"),
     },
     {
@@ -85,8 +84,8 @@ export function AppSidebar({
       title: "Customer Orders",
       icon: Package,
       isActive: currentTab === "orders",
-      badge: ordersCount > 0 ? `${ordersCount} new` : null,
-      badgeColor: "bg-[#d4af37] text-stone-900 font-bold",
+      // badge: ordersCount > 0 ? `${ordersCount} new` : null,
+      // badgeColor: "bg-[#d4af37] text-stone-900 font-bold",
       onClick: () => handleTabClick("orders"),
     },
     {
@@ -134,19 +133,10 @@ export function AppSidebar({
   const systemNavItems = [
     {
       id: "settings" as AdminTab,
-      title: "Site & Hero Settings",
+      title: "Admin Settings",
       icon: Settings,
       isActive: currentTab === "settings",
       onClick: () => handleTabClick("settings"),
-    },
-    {
-      id: "backup" as AdminTab,
-      title: "Backup & Restore",
-      icon: Database,
-      isActive: currentTab === "backup",
-      badge: "JSON",
-      badgeColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-      onClick: () => handleTabClick("backup"),
     },
   ]
 
@@ -259,17 +249,6 @@ export function AppSidebar({
                       />
                       <span className="truncate">{item.title}</span>
                     </SidebarMenuButton>
-
-                    {item.badge && (
-                      <SidebarMenuBadge
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold leading-none ${
-                          item.badgeColor ||
-                          "bg-primary/10 text-primary dark:bg-emerald-950 dark:text-emerald-300 border border-border"
-                        }`}
-                      >
-                        {item.badge}
-                      </SidebarMenuBadge>
-                    )}
                   </SidebarMenuItem>
                 )
               })}

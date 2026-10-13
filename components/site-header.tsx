@@ -21,8 +21,7 @@ const TAB_TITLES: Record<AdminTab, string> = {
   grading: "Grading Visualizer",
   health: "Doctor of Spices",
   faqs: "FAQ Knowledge Base",
-  settings: "Site & Hero Settings",
-  backup: "Backup & Restore",
+  settings: "Admin Settings",
 }
 
 export interface SiteHeaderProps {

@@ -14,7 +14,6 @@ import GradingView, { GradeItem } from "@/components/admin/views/GradingView";
 import HealthView, { HealthTopic } from "@/components/admin/views/HealthView";
 import FaqsView, { FAQCategory } from "@/components/admin/views/FaqsView";
 import SettingsView from "@/components/admin/views/SettingsView";
-import BackupView from "@/components/admin/views/BackupView";
 import {
   checkAdminAuth,
   loadCMSData,
@@ -219,13 +218,6 @@ export default function AdminPage() {
               />
             )}
 
-            {currentTab === "backup" && (
-              <BackupView
-                data={cmsData}
-                onRestoreData={handleRestoreData}
-                onResetData={handleResetData}
-              />
-            )}
           </div>
         </main>
       </SidebarInset>
