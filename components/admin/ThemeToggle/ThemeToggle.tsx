@@ -30,7 +30,7 @@ export default function ThemeToggle({
     <button
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={`group flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg border border-border bg-muted/40 hover:bg-muted text-foreground transition-all text-xs cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 ${className}`}
+      className={`group flex items-center justify-between w-full px-2.5 py-1.5 rounded-sm hover:bg-muted/40 text-foreground transition-all text-xs cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 ${className}`}
       title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
       aria-label="Toggle Theme"
     >

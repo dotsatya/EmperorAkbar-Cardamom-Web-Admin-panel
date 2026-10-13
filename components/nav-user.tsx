@@ -1,11 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import * as React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,39 +10,39 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import {
-  EllipsisVerticalIcon,
-  LogOutIcon,
-  CrownIcon,
-} from "lucide-react"
-import ThemeToggle from "@/components/admin/ThemeToggle/ThemeToggle"
+} from "@/components/ui/sidebar";
+import { EllipsisVerticalIcon, LogOutIcon, CrownIcon } from "lucide-react";
+import ThemeToggle from "@/components/admin/ThemeToggle/ThemeToggle";
 
 export function NavUser({
   user,
   onLogout,
 }: {
   user: {
-    name: string
-    email: string
-    avatar?: string
-    role?: string
-  }
-  onLogout?: () => void
+    name: string;
+    email: string;
+    avatar?: string;
+    role?: string;
+  };
+  onLogout?: () => void;
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
   const handleLogout = () => {
-    if (confirm("Are you sure you want to sign out from Emperor Akbar Admin Suite?")) {
-      onLogout?.()
+    if (
+      confirm(
+        "Are you sure you want to sign out from Emperor Akbar Admin Suite?",
+      )
+    ) {
+      onLogout?.();
     }
-  }
+  };
 
   return (
     <SidebarMenu>
@@ -65,7 +61,7 @@ export function NavUser({
                 <AvatarImage src={user.avatar} alt={user.name} />
               ) : null}
               <AvatarFallback className="rounded-xl bg-primary/10 text-primary dark:bg-[#173a27] dark:text-[#d4af37] font-bold text-xs">
-                EA
+                {user.name.split(" ")[0][0] + user.name.split(" ")[1][0]}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-xs leading-tight">
@@ -88,7 +84,7 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2.5 px-2 py-2 text-left text-sm border-b border-border">
                   <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:bg-[#173a27] dark:text-[#d4af37] border border-primary/20 flex items-center justify-center font-bold text-xs">
-                    <CrownIcon className="w-4 h-4" />
+                    {user.name.split(" ")[0][0] + user.name.split(" ")[1][0]}
                   </div>
                   <div className="grid flex-1 text-left text-xs leading-tight">
                     <span className="truncate font-bold text-popover-foreground">
@@ -119,5 +115,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

@@ -11,7 +11,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarGroup,
@@ -24,11 +23,10 @@ import {
   Package,
   UtensilsCrossed,
   FileText,
-  Sparkles,
   HeartPulse,
   HelpCircle,
   Settings,
-  Database,
+  Edit,
 } from "lucide-react"
 
 export type AdminTab =
@@ -108,8 +106,8 @@ export function AppSidebar({
   const brandNavItems = [
     {
       id: "grading" as AdminTab,
-      title: "Grading Visualizer",
-      icon: Sparkles,
+      title: "Edit Cardamom Grades",
+      icon: Edit,
       isActive: currentTab === "grading",
       onClick: () => handleTabClick("grading"),
     },
