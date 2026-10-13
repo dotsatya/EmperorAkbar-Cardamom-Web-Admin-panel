@@ -1,25 +1,151 @@
-import { websiteData as defaultData, Photos } from "@/data/websiteData";
+import { websiteData as defaultData } from "@/data/websiteData";
 import type { GradeItem } from "@/components/admin/views/GradingView";
 import type { HealthTopic } from "@/components/admin/views/HealthView";
 
-export type AdminProduct = {
+
+const DEFAULT_GRADE_IMAGES: Record<string, string> = {
+  "purple-grade": "/images/cardamom/purple-grade.jpg",
+  "pink-grade": "/images/cardamom/pink-grade.jpg",
+  "green-grade": "/images/cardamom/green-grade.jpg",
+  "orange-grade": "/images/cardamom/orange-grade.jpg",
+  "red-grade": "/images/cardamom/red-grade.jpg",
+};
+
+export const getStaticSrc = (item: unknown, fallback: string = ""): string => {
+  if (!item) return fallback;
+  if (typeof item === "string" && item.trim()) {
+    if (item.includes("/EmperorAkbar-Cardamom-Web-Redesign/")) {
+      return item.replace("/EmperorAkbar-Cardamom-Web-Redesign", "");
+    }
+    if (!item.startsWith("[object") && !item.includes("undefined")) {
+      return item;
+    }
+  }
+  if (typeof item === "object" && item !== null && "src" in item) {
+    const srcVal = (item as { src: unknown }).src;
+    if (typeof srcVal === "string" && srcVal) return srcVal;
+  }
+  return fallback;
+};
+
+export const availableCardamomWeights = [
+  "100 gm",
+  "250 gm",
+  "500 gm",
+  "1 kg",
+  "5 kg",
+] as const;
+
+export type AvailableCardamomWeight = (typeof availableCardamomWeights)[number];
+
+export const cardamomBadgeOptions = [
+  "Sale",
+  "Best Seller",
+  "Chef's Choice",
+  "GI Certified",
+  "Sold Out",
+] as const;
+
+export type CardamomBadge = (typeof cardamomBadgeOptions)[number];
+
+export const inventoryStatusOptions = [
+  "In Stock & Ready to Ship",
+  "Out of Stock (Sold Out)",
+] as const;
+
+export type InventoryStatus = (typeof inventoryStatusOptions)[number];
+
+export interface CardamomProduct {
   id: string;
+  slug: string;
   name: string;
   grade: string;
-  size: string;
-  price: number;
+  diameterSpec: string;
+  sellingPrice: number;
   originalPrice: number;
-  weight: string;
-  weights: string[];
-  image: string;
-  images: string[];
-  tag: string;
+  badge: CardamomBadge;
+  inventoryStatus: InventoryStatus;
+  imageUrl: string;
+  imageAlt?: string;
   description: string;
-  notes: string;
-  origin: string;
-  moisture: string;
-  inStock: boolean;
-};
+  availableWeights: string[];
+  defaultWeight: string;
+
+  // Interoperability with legacy AdminProduct fields
+  price?: number;
+  image?: string;
+  images?: string[];
+  tag?: string;
+  inStock?: boolean;
+  weights?: string[];
+  weight?: string;
+  size?: string;
+  origin?: string;
+  notes?: string;
+  moisture?: string;
+}
+
+// Backwards compatibility alias
+export type AdminProduct = CardamomProduct;
+
+export function normalizeCardamomProduct(
+  p: Partial<CardamomProduct> & { id: string; name: string }
+): CardamomProduct {
+  const sellingPrice = Number(p.sellingPrice ?? p.price ?? 0);
+  const originalPrice = Number(p.originalPrice ?? Math.round(sellingPrice * 1.5));
+  const badge: CardamomBadge =
+    (p.badge as CardamomBadge) ||
+    ((p.tag === "sold out" ? "Sold Out" : p.tag) as CardamomBadge) ||
+    "Sale";
+  const inventoryStatus: InventoryStatus =
+    (p.inventoryStatus as InventoryStatus) ||
+    (p.inStock === false || badge === "Sold Out"
+      ? "Out of Stock (Sold Out)"
+      : "In Stock & Ready to Ship");
+  const inStock = inventoryStatus === "In Stock & Ready to Ship" && badge !== "Sold Out";
+  const fallbackImage = DEFAULT_GRADE_IMAGES[p.id] || "/images/cardamom/purple-grade.jpg";
+  const resolvedImageUrl = getStaticSrc(p.imageUrl || p.image, fallbackImage);
+  const availableWeights =
+    p.availableWeights && p.availableWeights.length > 0
+      ? p.availableWeights
+      : p.weights && p.weights.length > 0
+      ? p.weights
+      : [...availableCardamomWeights];
+  const defaultWeight = p.defaultWeight || p.weight || availableWeights[0] || "100 gm";
+  const grade = p.grade || "Purple";
+  const diameterSpec = p.diameterSpec || p.size || grade;
+  const slug = p.slug || p.id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  return {
+    id: p.id,
+    slug,
+    name: p.name,
+    grade,
+    diameterSpec,
+    sellingPrice,
+    originalPrice,
+    badge,
+    inventoryStatus,
+    imageUrl: resolvedImageUrl,
+    imageAlt: p.imageAlt || `${p.name} cardamom`,
+    description: p.description || "",
+    availableWeights,
+    defaultWeight,
+
+    // Aliases
+    price: sellingPrice,
+    image: resolvedImageUrl,
+    images: p.images || (resolvedImageUrl ? [resolvedImageUrl] : []),
+    tag: badge,
+    inStock,
+    weights: availableWeights,
+    weight: defaultWeight,
+    size: diameterSpec,
+    origin: p.origin || "Alleppey, Kerala",
+    notes: p.notes || "Sealed in Aroma-Lock packaging",
+    moisture: p.moisture || "Max 10%",
+  };
+}
 
 export type AdminRecipe = {
   id: string;
@@ -78,6 +204,8 @@ export type UserOrder = {
   paymentMethod: string;
 };
 
+
+
 // Backwards compatibility alias
 export type AdminOrder = UserOrder;
 
@@ -114,22 +242,106 @@ const CMS_STORAGE_KEY = "emperorakbar_cms_data";
 const ORDERS_STORAGE_KEY = "emperorakbar_orders";
 const AUTH_STORAGE_KEY = "emperorakbar_admin_auth";
 
-const getStaticSrc = (item: unknown, fallback: string): string => {
-  if (!item) return fallback;
-  if (typeof item === "string") return item;
-  if (typeof item === "object" && item !== null && "src" in item) {
-    const srcVal = (item as { src: unknown }).src;
-    if (typeof srcVal === "string") return srcVal;
-    if (typeof srcVal === "object" && srcVal !== null && "src" in srcVal) {
-      return (srcVal as { src: string }).src;
-    }
-  }
-  return fallback;
-};
+const purpleImg = "/images/cardamom/purple-grade.jpg";
+const greenImg = "/images/cardamom/green-grade.jpg";
+const pinkImg = "/images/cardamom/pink-grade.jpg";
 
-const purpleImg = getStaticSrc(Photos.purpleSeed[0], "/purple/1.jpg");
-const greenImg = getStaticSrc(Photos.greenSeed[0], "/green/1.webp");
-const pinkImg = getStaticSrc(Photos.pinkSeed[0], "/pink/1.webp");
+export const cardamomProducts: CardamomProduct[] = [
+  normalizeCardamomProduct({
+    id: "purple-grade",
+    slug: "purple-grade-cardamom",
+    name: "Purple Grade (8 mm & above) Cardamom",
+    grade: "Purple",
+    diameterSpec: "Purple",
+    sellingPrice: 2299,
+    originalPrice: 3800,
+    badge: "Sale",
+    inventoryStatus: "In Stock & Ready to Ship",
+    imageUrl: "/images/cardamom/purple-grade.jpg",
+    imageAlt: "Purple Grade (8 mm and above) cardamom",
+    description:
+      "Versatile spice, chef recommended, ideal for the discerning home consumer",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
+  }),
+  normalizeCardamomProduct({
+    id: "pink-grade",
+    slug: "pink-grade-cardamom",
+    name: "Pink Grade (7.5 mm & above) Cardamom",
+    grade: "Pink",
+    diameterSpec: "Pink",
+    sellingPrice: 329,
+    originalPrice: 650,
+    badge: "Sold Out",
+    inventoryStatus: "Out of Stock (Sold Out)",
+    imageUrl: "/images/cardamom/pink-grade.jpg",
+    imageAlt: "Pink Grade (7.5 mm and above) cardamom",
+    description:
+      "Versatile spice, ideal for the discerning home consumer",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
+  }),
+  normalizeCardamomProduct({
+    id: "green-grade",
+    slug: "green-grade-cardamom",
+    name: "Green Grade (7–8mm) Cardamom",
+    grade: "Green",
+    diameterSpec: "Green",
+    sellingPrice: 2149,
+    originalPrice: 3500,
+    badge: "Sale",
+    inventoryStatus: "In Stock & Ready to Ship",
+    imageUrl: "/images/cardamom/green-grade.jpg",
+    imageAlt: "Green Grade (7–8 mm) cardamom",
+    description:
+      "Versatile spice, ideal for the discerning home consumer",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
+  }),
+  normalizeCardamomProduct({
+    id: "orange-grade",
+    slug: "orange-grade-cardamom",
+    name: "Orange Grade (6.5–7.5mm) Cardamom",
+    grade: "Orange",
+    diameterSpec: "Orange",
+    sellingPrice: 1899,
+    originalPrice: 3000,
+    badge: "Sold Out",
+    inventoryStatus: "Out of Stock (Sold Out)",
+    imageUrl: "/images/cardamom/orange-grade.jpg",
+    imageAlt: "Orange Grade (6.5–7.5 mm) cardamom",
+    description: "Ideal for industrial use",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
+  }),
+  normalizeCardamomProduct({
+    id: "red-grade",
+    slug: "red-grade-cardamom",
+    name: "Red Grade (6–7mm) Cardamom",
+    grade: "Red",
+    diameterSpec: "Red",
+    sellingPrice: 1849,
+    originalPrice: 2600,
+    badge: "Sale",
+    inventoryStatus: "In Stock & Ready to Ship",
+    imageUrl: "/images/cardamom/red-grade.jpg",
+    imageAlt: "Red Grade (6–7 mm) cardamom",
+    description: "Versatile spice, ideal for industrial use",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
+  }),
+];
+
+/** Small helpers for product cards and admin forms. */
+export const getCardamomProductById = (
+  id: string,
+): CardamomProduct | undefined =>
+  cardamomProducts.find((product) => product.id === id);
+
+export const getCardamomProductBySlug = (
+  slug: string,
+): CardamomProduct | undefined =>
+  cardamomProducts.find((product) => product.slug === slug);
 
 const DEFAULT_ORDERS: UserOrder[] = [
   {
@@ -238,24 +450,7 @@ export function getInitialCMSData(): WebsiteCMSData {
       facebookUrl: "https://facebook.com/emperorakbar",
       youtubeUrl: "https://youtube.com/@emperorakbar",
     },
-    products: defaultData.shop.products.map((p: (typeof defaultData.shop.products)[number]) => ({
-      id: String(p.id),
-      name: p.name,
-      price: p.price,
-      originalPrice: p.originalPrice || Math.round(p.price * 1.5),
-      weight: p.weights?.[0] || "100g",
-      weights: p.weights || ["100 gm", "250 gm", "500 gm"],
-      image: typeof p.image === "string" ? p.image : (p.image as { src?: string })?.src || "",
-      images: (p.images || []).map((img: unknown) => (typeof img === "string" ? img : (img as { src?: string })?.src || "")),
-      tag: p.status || "Sale",
-      description: p.usage || p.speciality || p.name,
-      notes: "Sealed in Aroma-Lock packaging",
-      origin: p.origin || "Alleppey, Kerala",
-      moisture: "Max 10%",
-      grade: p.grade || p.size || "GI Tagged",
-      size: p.size || "7-8mm",
-      inStock: p.status !== "sold out",
-    })),
+    products: cardamomProducts.map((p) => ({ ...p })),
     recipes: defaultData.recipes.items.map((r: (typeof defaultData.recipes.items)[number]) => ({
       id: r.id,
       title: r.title,
@@ -312,7 +507,13 @@ export function loadCMSData(): WebsiteCMSData {
       localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.products)) {
+      parsed.products = parsed.products.map((p: Partial<CardamomProduct> & { id: string; name: string }) =>
+        normalizeCardamomProduct(p)
+      );
+    }
+    return parsed;
   } catch (err) {
     console.error("Failed to parse CMS data from localStorage", err);
     return getInitialCMSData();

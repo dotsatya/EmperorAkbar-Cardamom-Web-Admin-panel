@@ -8,14 +8,22 @@ import {
   Edit2,
   Trash2,
   ShoppingBag,
-  Sparkles,
   X,
 } from "lucide-react";
-import { AdminProduct } from "@/lib/adminStore";
+import {
+  CardamomProduct,
+  cardamomBadgeOptions,
+  inventoryStatusOptions,
+  availableCardamomWeights,
+  CardamomBadge,
+  InventoryStatus,
+  normalizeCardamomProduct,
+  getStaticSrc,
+} from "@/lib/adminStore";
 
 interface ProductsViewProps {
-  products: AdminProduct[];
-  onSaveProducts: (updated: AdminProduct[]) => void;
+  products: CardamomProduct[];
+  onSaveProducts: (updated: CardamomProduct[]) => void;
   openCreateModalDirectly?: boolean;
 }
 
@@ -26,58 +34,86 @@ export default function ProductsView({
 }: ProductsViewProps) {
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState("all");
-  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<CardamomProduct | null>(null);
   const [isCreating, setIsCreating] = useState(openCreateModalDirectly);
 
   // Form State for Editing/Creating
-  const [formState, setFormState] = useState<Partial<AdminProduct>>({
+  const [formState, setFormState] = useState<Partial<CardamomProduct>>({
     id: "",
+    slug: "",
     name: "",
-    price: 1999,
-    originalPrice: 2999,
-    weights: ["50g", "100g", "250g", "500g"],
-    weight: "100g",
-    image: "",
-    tag: "Sale",
-    grade: "8mm & Above",
-    inStock: true,
+    grade: "Purple",
+    diameterSpec: "Purple",
+    sellingPrice: 2299,
+    originalPrice: 3800,
+    badge: "Sale",
+    inventoryStatus: "In Stock & Ready to Ship",
+    imageUrl: "",
+    imageAlt: "",
     description: "",
-    notes: "",
+    availableWeights: [...availableCardamomWeights],
+    defaultWeight: "100 gm",
   });
 
   const filteredProducts = products.filter((p) => {
+    const searchLower = search.toLowerCase();
     const matchesSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase());
+      p.name.toLowerCase().includes(searchLower) ||
+      p.id.toLowerCase().includes(searchLower) ||
+      (p.grade && p.grade.toLowerCase().includes(searchLower)) ||
+      (p.diameterSpec && p.diameterSpec.toLowerCase().includes(searchLower)) ||
+      (p.description && p.description.toLowerCase().includes(searchLower));
+
+    const isSoldOut =
+      p.inventoryStatus === "Out of Stock (Sold Out)" ||
+      !p.inStock ||
+      p.badge === "Sold Out" ||
+      p.tag === "Sold Out";
+
     const matchesTag =
       filterTag === "all" ||
-      (filterTag === "inStock" && p.inStock) ||
-      (filterTag === "soldOut" && !p.inStock) ||
+      (filterTag === "inStock" && !isSoldOut) ||
+      (filterTag === "soldOut" && isSoldOut) ||
+      (filterTag === "sale" && (p.badge === "Sale" || p.tag === "Sale")) ||
+      p.badge?.toLowerCase() === filterTag.toLowerCase() ||
       p.tag?.toLowerCase() === filterTag.toLowerCase();
+
     return matchesSearch && matchesTag;
   });
 
-  const handleOpenEdit = (product: AdminProduct) => {
-    setEditingProduct(product);
-    setFormState({ ...product });
+  const handleOpenEdit = (product: CardamomProduct) => {
+    const normalized = normalizeCardamomProduct(product);
+    setEditingProduct(normalized);
+    setFormState({
+      ...normalized,
+      sellingPrice: normalized.sellingPrice,
+      originalPrice: normalized.originalPrice,
+      diameterSpec: normalized.diameterSpec || normalized.grade,
+      badge: normalized.badge,
+      inventoryStatus: normalized.inventoryStatus,
+      imageUrl: getStaticSrc(normalized.imageUrl || normalized.image, ""),
+      availableWeights: normalized.availableWeights || normalized.weights,
+      defaultWeight: normalized.defaultWeight || normalized.weight,
+    });
     setIsCreating(false);
   };
 
   const handleOpenCreate = () => {
     setFormState({
-      id: `grade-${Date.now()}`,
+      id: `cardamom-${Date.now()}`,
+      slug: `cardamom-${Date.now()}`,
       name: "",
-      price: 1999,
-      originalPrice: 2999,
-      weights: ["50g", "100g", "250g", "500g"],
-      weight: "100g",
-      image: "https://www.emperorakbar.com/cdn/shop/files/EAC_Website_Home_PurpleGrade_020126_900x.jpg",
-      tag: "Sale",
-      grade: "Alleppey GI-Tagged",
-      inStock: true,
-      description: "Authentic, freshly harvested aromatic Alleppey green cardamom pods with high essential oil retention.",
-      notes: "Packed in Aroma-Lock sealed pouches.",
+      grade: "Purple",
+      diameterSpec: "Purple",
+      sellingPrice: 2299,
+      originalPrice: 3800,
+      badge: "Sale",
+      inventoryStatus: "In Stock & Ready to Ship",
+      imageUrl: "",
+      imageAlt: "",
+      description: "Authentic, freshly harvested aromatic Alleppey green cardamom pods.",
+      availableWeights: [...availableCardamomWeights],
+      defaultWeight: "100 gm",
     });
     setEditingProduct(null);
     setIsCreating(true);
@@ -92,25 +128,50 @@ export default function ProductsView({
     e.preventDefault();
     if (!formState.name) return;
 
+    const sellingPrice = Number(formState.sellingPrice ?? formState.price) || 0;
+    const originalPrice = Number(formState.originalPrice) || 0;
+    const badge = (formState.badge || formState.tag || "Sale") as CardamomBadge;
+    const inventoryStatus = (formState.inventoryStatus ||
+      (badge === "Sold Out"
+        ? "Out of Stock (Sold Out)"
+        : "In Stock & Ready to Ship")) as InventoryStatus;
+    const inStock = inventoryStatus === "In Stock & Ready to Ship" && badge !== "Sold Out";
+    const imageUrl = getStaticSrc(formState.imageUrl || formState.image, "");
+    const availableWeights =
+      formState.availableWeights && formState.availableWeights.length > 0
+        ? formState.availableWeights
+        : formState.weights && formState.weights.length > 0
+        ? formState.weights
+        : [...availableCardamomWeights];
+    const defaultWeight =
+      formState.defaultWeight || formState.weight || availableWeights[0] || "100 gm";
+    const grade = formState.grade || "Purple";
+    const diameterSpec = formState.diameterSpec || formState.size || grade;
+
+    const itemToSave = normalizeCardamomProduct({
+      ...formState,
+      id: formState.id || (isCreating ? `cardamom-${Date.now()}` : editingProduct?.id || ""),
+      slug: formState.slug || (formState.id || `cardamom-${Date.now()}`),
+      name: formState.name,
+      grade,
+      diameterSpec,
+      sellingPrice,
+      originalPrice,
+      badge,
+      inventoryStatus,
+      imageUrl,
+      imageAlt: formState.imageAlt || `${formState.name} cardamom`,
+      description: formState.description || "",
+      availableWeights,
+      defaultWeight,
+      inStock,
+    });
+
     if (isCreating) {
-      const newProduct: AdminProduct = {
-        ...(formState as AdminProduct),
-        id: formState.id || `grade-${Date.now()}`,
-        price: Number(formState.price) || 0,
-        originalPrice: Number(formState.originalPrice) || 0,
-        weights: formState.weights || ["100g"],
-      };
-      onSaveProducts([...products, newProduct]);
+      onSaveProducts([...products, itemToSave]);
     } else if (editingProduct) {
       const updated = products.map((p) =>
-        p.id === editingProduct.id
-          ? ({
-              ...p,
-              ...formState,
-              price: Number(formState.price) || 0,
-              originalPrice: Number(formState.originalPrice) || 0,
-            } as AdminProduct)
-          : p
+        p.id === editingProduct.id ? itemToSave : p
       );
       onSaveProducts(updated);
     }
@@ -185,7 +246,17 @@ export default function ProductsView({
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredProducts.map((product) => {
-          const isSoldOut = !product.inStock || product.tag === "Sold Out";
+          const isSoldOut =
+            product.inventoryStatus === "Out of Stock (Sold Out)" ||
+            !product.inStock ||
+            product.badge === "Sold Out" ||
+            product.tag === "Sold Out";
+          const displayPrice = product.sellingPrice ?? product.price ?? 0;
+          const displayOriginalPrice = product.originalPrice;
+          const badgeText = isSoldOut ? "Sold Out" : product.badge || product.tag || "In Stock";
+          const gradeText = product.diameterSpec || product.grade;
+          const imageSrc = getStaticSrc(product.imageUrl || product.image, "");
+
           return (
             <div
               key={product.id}
@@ -202,11 +273,11 @@ export default function ProductsView({
                           : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                       }`}
                     >
-                      {isSoldOut ? "Sold Out" : product.tag || "In Stock"}
+                      {badgeText}
                     </span>
-                    {product.grade && (
+                    {gradeText && (
                       <span className="text-[10px] text-muted-foreground font-mono">
-                        {product.grade}
+                        {gradeText}
                       </span>
                     )}
                   </div>
@@ -232,10 +303,23 @@ export default function ProductsView({
                 {/* Product Image & Info */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-20 h-20 rounded-xl bg-muted/40 border border-border p-2 shrink-0 relative overflow-hidden flex items-center justify-center">
-                    {product.image ? (
+                    {imageSrc ? (
                       <img
-                        src={product.image}
-                        alt={product.name}
+                        src={imageSrc}
+                        alt={product.imageAlt || product.name}
+                        onError={(e) => {
+                          const gradeFallbacks: Record<string, string> = {
+                            "purple-grade": "/purple/1.jpg",
+                            "pink-grade": "/pink/1.webp",
+                            "green-grade": "/green/1.webp",
+                            "orange-grade": "/orange/1.webp",
+                            "red-grade": "/red/1.webp",
+                          };
+                          const fb = gradeFallbacks[product.id] || "/purple/1.jpg";
+                          if (!e.currentTarget.src.endsWith(fb)) {
+                            e.currentTarget.src = fb;
+                          }
+                        }}
                         className="w-full h-full object-contain"
                       />
                     ) : (
@@ -259,7 +343,7 @@ export default function ProductsView({
                     Available Variants:
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {(product.weights || ["100g"]).map((w) => (
+                    {(product.availableWeights || product.weights || ["100 gm"]).map((w) => (
                       <span
                         key={w}
                         className="px-2 py-0.5 rounded-md bg-muted/60 border border-border text-[10px] font-mono text-muted-foreground"
@@ -276,15 +360,17 @@ export default function ProductsView({
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-bold font-sans text-primary dark:text-[#d4af37]">
-                      ₹{product.price}
+                      ₹{displayPrice}
                     </span>
-                    {product.originalPrice && product.originalPrice > product.price && (
+                    {displayOriginalPrice && displayOriginalPrice > displayPrice && (
                       <span className="text-xs text-muted-foreground line-through">
-                        ₹{product.originalPrice}
+                        ₹{displayOriginalPrice}
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-muted-foreground">Default: {product.weight || "100g"}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    Default: {product.defaultWeight || product.weight || "100 gm"}
+                  </span>
                 </div>
 
                 <button
@@ -303,156 +389,222 @@ export default function ProductsView({
       {/* Edit / Create Modal */}
       {(editingProduct || isCreating) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl my-8 relative max-h-[90vh] overflow-y-auto text-card-foreground">
-            <div className="flex items-center justify-between pb-4 border-b border-border mb-6">
-              <h3 className="text-lg font-bold font-sans text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary dark:text-[#d4af37]" />
+          <div className="bg-white dark:bg-[#18181b] border border-[#e8e2d5] dark:border-stone-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl my-8 relative max-h-[90vh] overflow-y-auto text-card-foreground">
+            <div className="flex items-center justify-between pb-4 border-b border-[#ece6d9] dark:border-stone-800 mb-6">
+              <h3 className="text-lg font-bold font-sans text-stone-900 dark:text-stone-100 flex items-center gap-2">
                 {isCreating ? "Add New Cardamom Grade Product" : `Edit Product: ${editingProduct?.name}`}
               </h3>
               <button
                 onClick={handleCloseModal}
-                className="w-8 h-8 rounded-lg bg-muted/60 text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-[#f4efe6] dark:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveForm} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveForm} className="space-y-4 text-xs sm:text-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Product Name</label>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Product Name
+                  </label>
                   <input
                     type="text"
                     required
                     value={formState.name || ""}
                     onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                    placeholder="e.g. Purple Grade Cardamom"
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    placeholder="Purple Grade (8 mm & above) Cardamom"
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Pod Grade / Diameter Spec</label>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Pod Grade / Diameter Spec
+                  </label>
                   <input
                     type="text"
-                    value={formState.grade || ""}
-                    onChange={(e) => setFormState({ ...formState, grade: e.target.value })}
-                    placeholder="e.g. 8mm & Above"
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Selling Price (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    value={formState.price ?? ""}
-                    onChange={(e) => setFormState({ ...formState, price: Number(e.target.value) })}
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Original / MRP Price (₹)</label>
-                  <input
-                    type="number"
-                    value={formState.originalPrice ?? ""}
-                    onChange={(e) => setFormState({ ...formState, originalPrice: Number(e.target.value) })}
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Badge Tag</label>
-                  <select
-                    value={formState.tag || "Sale"}
+                    value={formState.diameterSpec ?? formState.grade ?? ""}
                     onChange={(e) =>
                       setFormState({
                         ...formState,
-                        tag: e.target.value,
-                        inStock: e.target.value !== "Sold Out",
+                        diameterSpec: e.target.value,
+                        grade: e.target.value,
                       })
                     }
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Purple"
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Selling Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={formState.sellingPrice ?? formState.price ?? ""}
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        sellingPrice: Number(e.target.value),
+                        price: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Original / MRP Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={formState.originalPrice ?? ""}
+                    onChange={(e) =>
+                      setFormState({ ...formState, originalPrice: Number(e.target.value) })
+                    }
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Badge Tag
+                  </label>
+                  <select
+                    value={formState.badge || formState.tag || "Sale"}
+                    onChange={(e) => {
+                      const badge = e.target.value as CardamomBadge;
+                      setFormState({
+                        ...formState,
+                        badge,
+                        tag: badge,
+                        inventoryStatus:
+                          badge === "Sold Out"
+                            ? "Out of Stock (Sold Out)"
+                            : formState.inventoryStatus,
+                        inStock: badge !== "Sold Out",
+                      });
+                    }}
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
                   >
-                    <option value="Sale">Sale</option>
-                    <option value="Best Seller">Best Seller</option>
-                    <option value="Chef's Choice">Chef&apos;s Choice</option>
-                    <option value="GI Certified">GI Certified</option>
-                    <option value="Sold Out">Sold Out</option>
+                    {cardamomBadgeOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-foreground font-semibold mb-1.5">Inventory Status</label>
+                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                    Inventory Status
+                  </label>
                   <select
-                    value={formState.inStock ? "inStock" : "soldOut"}
-                    onChange={(e) =>
+                    value={
+                      formState.inventoryStatus ||
+                      (formState.inStock === false
+                        ? "Out of Stock (Sold Out)"
+                        : "In Stock & Ready to Ship")
+                    }
+                    onChange={(e) => {
+                      const status = e.target.value as InventoryStatus;
                       setFormState({
                         ...formState,
-                        inStock: e.target.value === "inStock",
-                        tag: e.target.value === "soldOut" ? "Sold Out" : formState.tag,
-                      })
-                    }
-                    className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-primary"
+                        inventoryStatus: status,
+                        inStock: status === "In Stock & Ready to Ship",
+                        badge:
+                          status === "Out of Stock (Sold Out)"
+                            ? "Sold Out"
+                            : formState.badge === "Sold Out"
+                            ? "Sale"
+                            : formState.badge,
+                        tag:
+                          status === "Out of Stock (Sold Out)"
+                            ? "Sold Out"
+                            : formState.tag === "Sold Out"
+                            ? "Sale"
+                            : formState.tag,
+                      });
+                    }}
+                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
                   >
-                    <option value="inStock">In Stock & Ready to Ship</option>
-                    <option value="soldOut">Out of Stock (Sold Out)</option>
+                    {inventoryStatusOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-foreground font-semibold mb-1.5">Product Image URL</label>
+                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  Product Image URL
+                </label>
                 <input
                   type="text"
-                  value={formState.image || ""}
-                  onChange={(e) => setFormState({ ...formState, image: e.target.value })}
-                  placeholder="https://... or /images/..."
-                  className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  value={getStaticSrc(formState.imageUrl || formState.image, "")}
+                  onChange={(e) =>
+                    setFormState({ ...formState, imageUrl: e.target.value, image: e.target.value })
+                  }
+                  placeholder="/images/cardamom/... or https://..."
+                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-foreground font-semibold mb-1.5">Description</label>
+                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  Description
+                </label>
                 <textarea
                   rows={3}
                   value={formState.description || ""}
                   onChange={(e) => setFormState({ ...formState, description: e.target.value })}
-                  className="w-full bg-background border border-input rounded-xl p-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  placeholder="Versatile spice, chef recommended, ideal for the discerning home consumer"
+                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl p-4 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all resize-y"
                 />
               </div>
 
               <div>
-                <label className="block text-foreground font-semibold mb-1.5">Available Weights (Comma separated)</label>
+                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  Available Weights (Comma separated)
+                </label>
                 <input
                   type="text"
-                  value={(formState.weights || []).join(", ")}
-                  onChange={(e) =>
+                  value={(formState.availableWeights || formState.weights || []).join(", ")}
+                  onChange={(e) => {
+                    const parsedWeights = e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean);
                     setFormState({
                       ...formState,
-                      weights: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                    })
-                  }
-                  placeholder="50g, 100g, 250g, 500g"
-                  className="w-full bg-background border border-input rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                      availableWeights: parsedWeights,
+                      weights: parsedWeights,
+                    });
+                  }}
+                  placeholder="100 gm, 250 gm, 500 gm, 1 kg, 5 kg"
+                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
                 />
               </div>
 
-              <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-[#ece6d9] dark:border-stone-800 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2.5 rounded-xl bg-muted/60 border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  className="px-6 py-2.5 rounded-2xl bg-[#ece8df] dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:bg-[#e2ded5] dark:hover:bg-stone-700 border border-[#ded8cc]/70 dark:border-stone-700 font-medium text-xs sm:text-sm transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b89528] text-stone-900 font-bold uppercase tracking-wider shadow-lg shadow-black/20 hover:from-[#e5bf45] transition-all cursor-pointer"
+                  className="px-6 py-2.5 rounded-2xl bg-[#c59a27] hover:bg-[#d8a82b] text-stone-950 font-bold uppercase tracking-wider text-xs shadow-md shadow-black/10 transition-all active:scale-95 cursor-pointer"
                 >
-                  Save Changes
+                  SAVE CHANGES
                 </button>
               </div>
             </form>
@@ -462,3 +614,4 @@ export default function ProductsView({
     </div>
   );
 }
+
