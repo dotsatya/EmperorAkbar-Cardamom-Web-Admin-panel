@@ -342,8 +342,8 @@ export default function RecipesView({}: RecipesViewProps) {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-sm text-card-foreground">
-        <div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-4 md:p-6 shadow-sm text-card-foreground">
+         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-primary dark:text-[#d4af37]" />
             Add a New Recipe

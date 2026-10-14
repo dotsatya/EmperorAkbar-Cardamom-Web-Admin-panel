@@ -168,7 +168,7 @@ export function AppSidebar({
                   Emperor Akbar
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-[#b89528] dark:text-[#d4af37] font-semibold truncate">
-                  Admin Suite
+                  Admin Panel
                 </span>
               </div>
             </SidebarMenuButton>
