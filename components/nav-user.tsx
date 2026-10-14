@@ -68,9 +68,7 @@ export function NavUser({
               <span className="truncate font-semibold text-sidebar-foreground">
                 {user.name}
               </span>
-              <span className="truncate text-[10px] text-primary dark:text-[#d4af37] font-medium">
-                {user.role || "Master Access"}
-              </span>
+          
             </div>
             <EllipsisVerticalIcon className="ml-auto size-4 text-muted-foreground" />
           </DropdownMenuTrigger>
