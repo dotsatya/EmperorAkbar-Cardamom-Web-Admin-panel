@@ -240,7 +240,6 @@ export type WebsiteCMSData = {
 
 const CMS_STORAGE_KEY = "emperorakbar_cms_data";
 const ORDERS_STORAGE_KEY = "emperorakbar_orders";
-const AUTH_STORAGE_KEY = "emperorakbar_admin_auth";
 
 const purpleImg = "/images/cardamom/purple-grade.jpg";
 const greenImg = "/images/cardamom/green-grade.jpg";
@@ -576,25 +575,17 @@ export function createCustomerOrder(order: Omit<UserOrder, "id" | "orderNumber" 
 }
 
 export function checkAdminAuth(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(AUTH_STORAGE_KEY) === "authenticated_admin";
+  return true;
 }
 
-export function setAdminAuth(authenticated: boolean): void {
-  if (typeof window === "undefined") return;
-  if (authenticated) {
-    localStorage.setItem(AUTH_STORAGE_KEY, "authenticated_admin");
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
+export function setAdminAuth(): void {
+  // Login system removed - no-op
 }
 
 export function getAdminPassword(): string {
-  if (typeof window === "undefined") return "akbar@admin2026";
-  return localStorage.getItem("emperorakbar_admin_pwd") || "akbar@admin2026";
+  return "";
 }
 
-export function setAdminPassword(pwd: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("emperorakbar_admin_pwd", pwd);
+export function setAdminPassword(): void {
+  // Login system removed - no-op
 }

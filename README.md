@@ -102,14 +102,9 @@ Built with **Next.js 16**, **React 19**, **Tailwind CSS v4**, and **TypeScript**
 
 ---
 
-## 🔐 Admin Authentication
+## ⚡ Direct Admin Access
 
-The panel is protected with client-side authentication persisted in local session storage:
-
-* **Default Username**: `admin`
-* **Default Password**: `akbar@admin2026`
-
-> **Tip**: Password can be changed at any time under **Site & Hero Settings** ➔ **Security & Access Credentials**.
+The admin suite is configured with direct panel access for seamless management without login restrictions.
 
 ---
 
@@ -125,7 +120,6 @@ emperorakbar-web-admin-panel/
 │   └── page.tsx            # Main Emperor Akbar Admin Suite entry point
 ├── components/
 │   ├── admin/
-│   │   ├── AdminLogin.tsx  # Authentication modal with credential validation
 │   │   ├── ThemeToggle/    # Luxury dark/light theme switch
 │   │   └── views/          # Admin view modules
 │   │       ├── BackupView.tsx

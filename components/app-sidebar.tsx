@@ -45,7 +45,6 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onSelectTab?: (tab: AdminTab) => void
   ordersCount?: number
   productsCount?: number
-  onLogout?: () => void
 }
 
 export function AppSidebar({
@@ -53,7 +52,6 @@ export function AppSidebar({
   onSelectTab,
   ordersCount = 0,
   productsCount = 0,
-  onLogout,
   ...props
 }: AppSidebarProps) {
   const handleTabClick = (tab: AdminTab) => {
@@ -256,16 +254,13 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      {/* User Footer with Profile & Logout */}
+      {/* User Footer with Profile & Theme */}
       <SidebarFooter className="border-t border-sidebar-border p-2">
-
         <NavUser
           user={{
             name: "Akbar Admin",
             email: "admin@emperorakbar.com",
-            role: "Master Access",
           }}
-          onLogout={onLogout}
         />
       </SidebarFooter>
     </Sidebar>

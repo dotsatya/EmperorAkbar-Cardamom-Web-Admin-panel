@@ -6,9 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,12 +15,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { EllipsisVerticalIcon, LogOutIcon, CrownIcon } from "lucide-react";
+import { EllipsisVerticalIcon } from "lucide-react";
 import ThemeToggle from "@/components/admin/ThemeToggle/ThemeToggle";
 
 export function NavUser({
   user,
-  onLogout,
 }: {
   user: {
     name: string;
@@ -34,15 +31,10 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
 
-  const handleLogout = () => {
-    if (
-      confirm(
-        "Are you sure you want to sign out from Emperor Akbar Admin Suite?",
-      )
-    ) {
-      onLogout?.();
-    }
-  };
+  const initials =
+    user.name.split(" ").length > 1
+      ? user.name.split(" ")[0][0] + user.name.split(" ")[1][0]
+      : user.name.slice(0, 2).toUpperCase();
 
   return (
     <SidebarMenu>
@@ -61,14 +53,16 @@ export function NavUser({
                 <AvatarImage src={user.avatar} alt={user.name} />
               ) : null}
               <AvatarFallback className="rounded-xl bg-primary/10 text-primary dark:bg-[#173a27] dark:text-[#d4af37] font-bold text-xs">
-                {user.name.split(" ")[0][0] + user.name.split(" ")[1][0]}
+                {initials}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-xs leading-tight">
               <span className="truncate font-semibold text-sidebar-foreground">
                 {user.name}
               </span>
-          
+              <span className="truncate text-[11px] text-muted-foreground">
+                {user.role || user.email}
+              </span>
             </div>
             <EllipsisVerticalIcon className="ml-auto size-4 text-muted-foreground" />
           </DropdownMenuTrigger>
@@ -82,7 +76,7 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2.5 px-2 py-2 text-left text-sm border-b border-border">
                   <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:bg-[#173a27] dark:text-[#d4af37] border border-primary/20 flex items-center justify-center font-bold text-xs">
-                    {user.name.split(" ")[0][0] + user.name.split(" ")[1][0]}
+                    {initials}
                   </div>
                   <div className="grid flex-1 text-left text-xs leading-tight">
                     <span className="truncate font-bold text-popover-foreground">
@@ -95,20 +89,10 @@ export function NavUser({
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
-            {/* Theme Toggle directly above Log out */}
+            {/* Theme Toggle */}
             <div className="px-1 py-1">
               <ThemeToggle showLabel={true} />
             </div>
-
-            <DropdownMenuSeparator className="bg-border" />
-
-            <DropdownMenuItem
-              className="text-xs text-rose-600 dark:text-red-400 focus:bg-rose-50 dark:focus:bg-red-950/40 focus:text-rose-700 dark:focus:text-red-300 cursor-pointer"
-              onClick={handleLogout}
-            >
-              <LogOutIcon className="size-3.5 text-rose-600 dark:text-red-400" />
-              <span>Sign out</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

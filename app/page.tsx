@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import AdminLogin from "@/components/admin/AdminLogin";
 import { AppSidebar, AdminTab } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -15,7 +14,6 @@ import HealthView, { HealthTopic } from "@/components/admin/views/HealthView";
 import FaqsView, { FAQCategory } from "@/components/admin/views/FaqsView";
 import SettingsView from "@/components/admin/views/SettingsView";
 import {
-  checkAdminAuth,
   loadCMSData,
   saveCMSData,
   loadOrders,
@@ -29,7 +27,6 @@ import {
 
 export default function AdminPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentTab, setCurrentTab] = useState<AdminTab>("dashboard");
 
   // Quick Action Modal flags
@@ -42,7 +39,6 @@ export default function AdminPage() {
   useEffect(() => {
     //eslint-disable-next-line
     setIsMounted(true);
-    setIsAuthenticated(checkAdminAuth());
     setCmsData(loadCMSData());
     setOrders(loadOrders());
 
@@ -73,11 +69,6 @@ export default function AdminPage() {
         </div>
       </div>
     );
-  }
-
-  // If not logged in, show Login Screen
-  if (!isAuthenticated) {
-    return <AdminLogin onSuccess={() => setIsAuthenticated(true)} />;
   }
 
   // Data updater handlers
@@ -147,7 +138,6 @@ export default function AdminPage() {
         }}
         ordersCount={orders.filter((o) => o.status === "Pending").length}
         productsCount={cmsData.products.length}
-        onLogout={() => setIsAuthenticated(false)}
       />
 
       {/* Main Panel Inset */}
