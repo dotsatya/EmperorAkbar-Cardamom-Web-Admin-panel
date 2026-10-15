@@ -19,6 +19,7 @@ import {
   InventoryStatus,
   normalizeCardamomProduct,
   getStaticSrc,
+  DEFAULT_GRADE_IMAGES,
 } from "@/lib/adminStore";
 
 interface ProductsViewProps {
@@ -308,15 +309,8 @@ export default function ProductsView({
                         src={imageSrc}
                         alt={product.imageAlt || product.name}
                         onError={(e) => {
-                          const gradeFallbacks: Record<string, string> = {
-                            "purple-grade": "/purple/1.jpg",
-                            "pink-grade": "/pink/1.webp",
-                            "green-grade": "/green/1.webp",
-                            "orange-grade": "/orange/1.webp",
-                            "red-grade": "/red/1.webp",
-                          };
-                          const fb = gradeFallbacks[product.id] || "/purple/1.jpg";
-                          if (!e.currentTarget.src.endsWith(fb)) {
+                          const fb = DEFAULT_GRADE_IMAGES[product.id] || DEFAULT_GRADE_IMAGES["purple-grade"];
+                          if (fb && !e.currentTarget.src.includes(fb)) {
                             e.currentTarget.src = fb;
                           }
                         }}

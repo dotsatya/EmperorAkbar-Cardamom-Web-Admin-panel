@@ -3,13 +3,33 @@ import type { GradeItem } from "@/components/admin/views/GradingView";
 import type { HealthTopic } from "@/components/admin/views/HealthView";
 
 
-const DEFAULT_GRADE_IMAGES: Record<string, string> = {
-  "purple-grade": "/images/cardamom/purple-grade.jpg",
-  "pink-grade": "/images/cardamom/pink-grade.jpg",
-  "green-grade": "/images/cardamom/green-grade.jpg",
-  "orange-grade": "/images/cardamom/orange-grade.jpg",
-  "red-grade": "/images/cardamom/red-grade.jpg",
+// Purple grade
+import purple1 from "../public/purple/1.jpg";
+
+// Pink grade
+import pink1 from "../public/pink/1.webp";
+
+// Green grade
+import green1 from "../public/green/1.webp";
+
+// Orange grade
+import orange1 from "../public/orange/1.webp";
+
+// Red grade
+import red1 from "../public/red/1.webp";
+
+// Health benefits
+import health1 from "../public/Health/1.webp";
+
+export const DEFAULT_GRADE_IMAGES: Record<string, string> = {
+  "purple-grade": purple1.src,
+  "pink-grade": pink1.src,
+  "green-grade": green1.src,
+  "orange-grade": orange1.src,
+  "red-grade": red1.src,
 };
+
+export const DEFAULT_HEALTH_IMAGE = health1.src;
 
 export const getStaticSrc = (item: unknown, fallback: string = ""): string => {
   if (!item) return fallback;
@@ -103,8 +123,24 @@ export function normalizeCardamomProduct(
       ? "Out of Stock (Sold Out)"
       : "In Stock & Ready to Ship");
   const inStock = inventoryStatus === "In Stock & Ready to Ship" && badge !== "Sold Out";
-  const fallbackImage = DEFAULT_GRADE_IMAGES[p.id] || "/images/cardamom/purple-grade.jpg";
-  const resolvedImageUrl = getStaticSrc(p.imageUrl || p.image, fallbackImage);
+  const fallbackImage = DEFAULT_GRADE_IMAGES[p.id] || purple1.src;
+  let resolvedImageUrl = getStaticSrc(p.imageUrl || p.image, fallbackImage);
+  if (
+    !resolvedImageUrl ||
+    resolvedImageUrl.includes("/images/cardamom/") ||
+    resolvedImageUrl === "/images/cardamom/purple-grade.jpg" ||
+    resolvedImageUrl === "/images/cardamom/pink-grade.jpg" ||
+    resolvedImageUrl === "/images/cardamom/green-grade.jpg" ||
+    resolvedImageUrl === "/images/cardamom/orange-grade.jpg" ||
+    resolvedImageUrl === "/images/cardamom/red-grade.jpg" ||
+    resolvedImageUrl.startsWith("/purple/") ||
+    resolvedImageUrl.startsWith("/pink/") ||
+    resolvedImageUrl.startsWith("/green/") ||
+    resolvedImageUrl.startsWith("/orange/") ||
+    resolvedImageUrl.startsWith("/red/")
+  ) {
+    resolvedImageUrl = fallbackImage;
+  }
   const availableWeights =
     p.availableWeights && p.availableWeights.length > 0
       ? p.availableWeights
@@ -241,9 +277,11 @@ export type WebsiteCMSData = {
 const CMS_STORAGE_KEY = "emperorakbar_cms_data";
 const ORDERS_STORAGE_KEY = "emperorakbar_orders";
 
-const purpleImg = "/images/cardamom/purple-grade.jpg";
-const greenImg = "/images/cardamom/green-grade.jpg";
-const pinkImg = "/images/cardamom/pink-grade.jpg";
+export const purpleImg = purple1.src;
+export const greenImg = green1.src;
+export const pinkImg = pink1.src;
+export const orangeImg = orange1.src;
+export const redImg = red1.src;
 
 export const cardamomProducts: CardamomProduct[] = [
   normalizeCardamomProduct({
@@ -256,7 +294,7 @@ export const cardamomProducts: CardamomProduct[] = [
     originalPrice: 3800,
     badge: "Sale",
     inventoryStatus: "In Stock & Ready to Ship",
-    imageUrl: "/images/cardamom/purple-grade.jpg",
+    imageUrl: purple1.src,
     imageAlt: "Purple Grade (8 mm and above) cardamom",
     description:
       "Versatile spice, chef recommended, ideal for the discerning home consumer",
@@ -273,7 +311,7 @@ export const cardamomProducts: CardamomProduct[] = [
     originalPrice: 650,
     badge: "Sold Out",
     inventoryStatus: "Out of Stock (Sold Out)",
-    imageUrl: "/images/cardamom/pink-grade.jpg",
+    imageUrl: pink1.src,
     imageAlt: "Pink Grade (7.5 mm and above) cardamom",
     description:
       "Versatile spice, ideal for the discerning home consumer",
@@ -290,7 +328,7 @@ export const cardamomProducts: CardamomProduct[] = [
     originalPrice: 3500,
     badge: "Sale",
     inventoryStatus: "In Stock & Ready to Ship",
-    imageUrl: "/images/cardamom/green-grade.jpg",
+    imageUrl: green1.src,
     imageAlt: "Green Grade (7–8 mm) cardamom",
     description:
       "Versatile spice, ideal for the discerning home consumer",
@@ -307,7 +345,7 @@ export const cardamomProducts: CardamomProduct[] = [
     originalPrice: 3000,
     badge: "Sold Out",
     inventoryStatus: "Out of Stock (Sold Out)",
-    imageUrl: "/images/cardamom/orange-grade.jpg",
+    imageUrl: orange1.src,
     imageAlt: "Orange Grade (6.5–7.5 mm) cardamom",
     description: "Ideal for industrial use",
     availableWeights: [...availableCardamomWeights],
@@ -323,7 +361,7 @@ export const cardamomProducts: CardamomProduct[] = [
     originalPrice: 2600,
     badge: "Sale",
     inventoryStatus: "In Stock & Ready to Ship",
-    imageUrl: "/images/cardamom/red-grade.jpg",
+    imageUrl: red1.src,
     imageAlt: "Red Grade (6–7 mm) cardamom",
     description: "Versatile spice, ideal for industrial use",
     availableWeights: [...availableCardamomWeights],
@@ -543,7 +581,22 @@ export function loadOrders(): UserOrder[] {
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(DEFAULT_ORDERS));
       return DEFAULT_ORDERS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((ord: UserOrder) => ({
+        ...ord,
+        items: ord.items?.map((item) => ({
+          ...item,
+          image:
+            item.id && DEFAULT_GRADE_IMAGES[item.id]
+              ? DEFAULT_GRADE_IMAGES[item.id]
+              : item.image?.includes("/images/cardamom/") || !item.image
+              ? purpleImg
+              : item.image,
+        })),
+      }));
+    }
+    return DEFAULT_ORDERS;
   } catch (err) {
     console.error("Failed to parse orders", err);
     return DEFAULT_ORDERS;
