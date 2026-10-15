@@ -2,8 +2,8 @@
 
 A modern, high-performance web administration suite and client-side Content Management System (CMS) designed for the **Emperor Akbar Green Cardamom** e-commerce platform.
 
-🔗 **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/emperorakbar-web-admin-panel](https://dotsatya.github.io/emperorakbar-web-admin-panel)  
-📂 **GitHub Repository**: [https://github.com/dotsatya/emperorakbar-web-admin-panel](https://github.com/dotsatya/emperorakbar-web-admin-panel)
+🔗 **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/EmperorAkbar-Cardamom-Web-Admin-panel/](https://dotsatya.github.io/EmperorAkbar-Cardamom-Web-Admin-panel/)  
+📂 **GitHub Repository**: [https://github.com/dotsatya/EmperorAkbar-Cardamom-Web-Admin-panel](https://github.com/dotsatya/EmperorAkbar-Cardamom-Web-Admin-panel)
 
 Built with **Next.js 16**, **React 19**, **Tailwind CSS v4**, and **TypeScript**, styled in a luxury aesthetic featuring deep cardamom emerald and imperial gold accents, with full dark/light theme support.
 
@@ -154,7 +154,8 @@ emperorakbar-web-admin-panel/
 ## 📜 Available Scripts
 
 * **`npm run dev`**: Starts the local development server with Turbopack on `localhost:3000`.
-* **`npm run build`**: Type-checks and builds the production bundle.
+* **`npm run build`**: Type-checks and builds the static production bundle for export.
+* **`npm run deploy`**: Builds and deploys the static application to the `gh-pages` branch on GitHub Pages.
 * **`npm run start`**: Starts the production Next.js server.
 * **`npm run lint`**: Runs ESLint with Next.js and TypeScript configurations.
 
@@ -163,6 +164,6 @@ emperorakbar-web-admin-panel/
 ## 👤 Author & Attribution
 
 * **Creator & Lead Developer**: Conceptualized, designed, and developed from A to Z entirely by **[Satya (dotsatya)](https://github.com/dotsatya)**.
-* **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/emperorakbar-web-admin-panel](https://dotsatya.github.io/emperorakbar-web-admin-panel)
-* **Source Code**: [https://github.com/dotsatya/emperorakbar-web-admin-panel](https://github.com/dotsatya/emperorakbar-web-admin-panel)
+* **Live Demo (GitHub Pages)**: [https://dotsatya.github.io/EmperorAkbar-Cardamom-Web-Admin-panel/](https://dotsatya.github.io/EmperorAkbar-Cardamom-Web-Admin-panel/)
+* **Source Code**: [https://github.com/dotsatya/EmperorAkbar-Cardamom-Web-Admin-panel](https://github.com/dotsatya/EmperorAkbar-Cardamom-Web-Admin-panel)
 * **Brand Assets & Media**: Product descriptions, official imagery, and branding belong to **Emperor Akbar Cardamom** (Samex India Pvt. Ltd.), utilized for development and design showcase purposes.
