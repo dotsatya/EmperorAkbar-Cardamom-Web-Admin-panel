@@ -1,11 +1,8 @@
 import logo from "../public/images/logo.png";
-import heroBG from "../public/images/hero-bg.jpg";
 import purpleSeedDemo from "../public/images/cardamom-purple.png";
 import greenSeedDemo from "../public/images/Green_Cardamom.png";
 
-import akbarBg from "../public/images/akbarBg.png";
 
-import healthBG from "../public/images/Cardamom_Wellness_in_Nature.png";
 
 // Purple grade
 import purple1 from "../public/purple/1.jpg";
@@ -80,11 +77,8 @@ import eye from "../public/csr/eye.webp";
 
 export const Photos = {
   logo,
-  heroBG,
   purpleSeedDemo,
   greenSeedDemo,
-  akbarBg,
-
   purpleSeed: [
     { id: 1, src: purple1 },
     { id: 2, src: purple2 },
@@ -2095,7 +2089,6 @@ export const websiteData = {
 
   healthData: {
     hero: {
-      image: healthBG,
       eyebrow: "ALLEPPEY GREEN CARDAMOM",
       title: "The Natural Side of Cardamom",
       description:

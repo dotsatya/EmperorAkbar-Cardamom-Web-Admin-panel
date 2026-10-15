@@ -18,6 +18,24 @@ Built to serve as the unified back-office companion to the **[Emperor Akbar Webs
 
 ---
 
+## 📸 Admin Suite Interface Preview
+
+### 📊 1. Executive Dashboard Overview
+<div align="center">
+  <img src="public/images/image.png" alt="Emperor Akbar Admin Suite — Dashboard Preview" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <p><em>Executive Overview: Real-time sales revenue, order fulfillment pipeline, active pod inventory, and content publishing stats.</em></p>
+</div>
+
+<br />
+
+### 🍽️ 2. Gourmet Recipes CMS Studio (Shimi's Kitchen)
+<div align="center">
+  <img src="public/images/image2.png" alt="Emperor Akbar Admin Suite — Recipes CMS Studio" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <p><em>Culinary Studio: Manage collaborative Alleppey recipes, dietary tags, step-by-step directions, and chef author profiles.</em></p>
+</div>
+
+---
+
 ## 🎯 Architecture & Ecosystem Vision
 
 The Emperor Akbar e-commerce platform consists of two specialized applications working together harmoniously:
@@ -123,7 +141,6 @@ emperorakbar-web-admin-panel/
 │   └── workflows/
 │       └── deploy.yml              # Automated GitHub Actions workflow for GitHub Pages
 ├── app/
-│   ├── dashboard/                  # Interactive analytics demo
 │   ├── favicon.ico
 │   ├── globals.css                 # Theme tokens & Tailwind CSS v4 variables
 │   ├── layout.tsx                  # Root HTML shell with ThemeProvider & Tooltips
@@ -156,7 +173,7 @@ emperorakbar-web-admin-panel/
 │   └── utils.ts                    # ClassName merging utilities
 ├── public/
 │   ├── .nojekyll                   # Bypasses Jekyll on GitHub Pages to serve _next/ assets
-│   ├── images/                     # Packaging, seals & grade photography
+│   ├── images/                     # Packaging, seals & previews (image.png, image2.png)
 │   └── purple/, pink/, green/...   # High-resolution grade photography
 ├── next.config.ts                  # Static export configuration (output: export, basePath)
 ├── package.json                    # Dependencies & deployment scripts
