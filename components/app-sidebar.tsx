@@ -28,6 +28,7 @@ import {
   Settings,
   Edit,
 } from "lucide-react"
+import ThemeToggle from "./admin/ThemeToggle/ThemeToggle"
 
 export type AdminTab =
   | "dashboard"
@@ -248,6 +249,8 @@ export function AppSidebar({
                   </SidebarMenuItem>
                 )
               })}
+              
+              <ThemeToggle showLabel={true} />
 
             </SidebarMenu>
           </SidebarGroupContent>

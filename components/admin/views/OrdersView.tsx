@@ -12,7 +12,19 @@ import {
   Printer,
   X,
   CreditCard,
+  Filter,
+  ChevronDown,
+  Check,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { UserOrder } from "@/lib/adminStore";
 
 interface OrdersViewProps {
@@ -36,6 +48,39 @@ export default function OrdersView({ orders, onSaveOrders }: OrdersViewProps) {
       statusFilter === "all" || order.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
+
+  const orderFilterOptions = [
+    { id: "all", label: "All Orders", count: orders.length },
+    {
+      id: "Pending",
+      label: "Pending",
+      count: orders.filter((o) => o.status.toLowerCase() === "pending").length,
+    },
+    {
+      id: "Processing",
+      label: "Processing",
+      count: orders.filter((o) => o.status.toLowerCase() === "processing").length,
+    },
+    {
+      id: "Shipped",
+      label: "Shipped",
+      count: orders.filter((o) => o.status.toLowerCase() === "shipped").length,
+    },
+    {
+      id: "Delivered",
+      label: "Delivered",
+      count: orders.filter((o) => o.status.toLowerCase() === "delivered").length,
+    },
+    {
+      id: "Cancelled",
+      label: "Cancelled",
+      count: orders.filter((o) => o.status.toLowerCase() === "cancelled").length,
+    },
+  ];
+
+  const activeStatusFilter =
+    orderFilterOptions.find((opt) => opt.id.toLowerCase() === statusFilter.toLowerCase()) ||
+    orderFilterOptions[0];
 
   const handleUpdateStatus = (
     orderId: string,
@@ -87,35 +132,118 @@ export default function OrdersView({ orders, onSaveOrders }: OrdersViewProps) {
       </div>
 
       {/* Filter and Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             placeholder="Search orders by ID, customer name, phone, city..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#d4af37] transition-colors"
+            className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#d4af37] transition-colors"
           />
-        </div>
-
-        {/* Status Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {["all", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map((status) => (
+          {search && (
             <button
               type="button"
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize whitespace-nowrap cursor-pointer ${
-                statusFilter.toLowerCase() === status.toLowerCase()
-                  ? "bg-[#d4af37] text-stone-900 font-bold shadow-sm"
-                  : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
             >
-              {status}
+              <X className="w-3.5 h-3.5" />
             </button>
-          ))}
+          )}
         </div>
+
+        {/* Status Filter Dropdown on Right Side */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={`h-[38px] px-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2.5 transition-all cursor-pointer shadow-xs shrink-0 select-none ${
+              statusFilter.toLowerCase() !== "all"
+                ? "bg-[#d4af37]/10 border-[#d4af37]/40 text-[#b89528] dark:text-[#d4af37] font-bold"
+                : "bg-card border-border text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Filter
+                className={`w-3.5 h-3.5 ${
+                  statusFilter.toLowerCase() !== "all"
+                    ? "text-[#d4af37]"
+                    : "text-muted-foreground"
+                }`}
+              />
+              <span>{activeStatusFilter.label}</span>
+              {statusFilter.toLowerCase() !== "all" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+              )}
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-1" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            side="bottom"
+            sideOffset={6}
+            className="min-w-48 w-56 p-1.5 rounded-xl border border-border bg-popover shadow-xl text-popover-foreground z-50"
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Filter by Status
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 border-border" />
+              {orderFilterOptions.map((opt) => {
+                const isSelected =
+                  statusFilter.toLowerCase() === opt.id.toLowerCase();
+                const dotColor =
+                  opt.id === "Delivered"
+                    ? "bg-emerald-500"
+                    : opt.id === "Shipped"
+                    ? "bg-purple-500"
+                    : opt.id === "Processing"
+                    ? "bg-blue-500"
+                    : opt.id === "Pending"
+                    ? "bg-amber-500"
+                    : opt.id === "Cancelled"
+                    ? "bg-rose-500"
+                    : "bg-muted-foreground";
+
+                return (
+                  <DropdownMenuItem
+                    key={opt.id}
+                    onClick={() => setStatusFilter(opt.id)}
+                    className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-[#d4af37]/15 text-stone-900 dark:text-[#d4af37] font-semibold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                      <span>{opt.label}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                        {opt.count}
+                      </span>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-[#d4af37]" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
+            {statusFilter.toLowerCase() !== "all" && (
+              <>
+                <DropdownMenuSeparator className="my-1 border-border" />
+                <DropdownMenuItem
+                  onClick={() => setStatusFilter("all")}
+                  className="flex items-center justify-center py-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
+                >
+                  Reset to All Orders
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Orders Table */}

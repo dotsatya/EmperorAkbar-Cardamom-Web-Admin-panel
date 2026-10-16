@@ -76,15 +76,17 @@ The Emperor Akbar e-commerce platform consists of two specialized applications w
 * **Price & Weight Variants**: Define live pricing, discount rates, stock availability, and package sizes (50g, 100g, 250g, 500g).
 * **Catalog Badges**: Toggle promotional flags such as *Bestseller*, *Limited Harvest*, *Sale*, and *Sold Out*.
 * **Aroma-Lock Metadata**: Edit harvest origins, moisture percentages, aroma-lock notes, and high-resolution packaging imagery.
+* **Search & Filter Dropdown**: Responsive search bar paired side-by-side with an inventory status dropdown (*All Items*, *In Stock*, *Sold Out*, *On Sale*) featuring real-time quantity counts, status dots, and one-click reset.
 
 ### 3. 📦 Customer Orders & Fulfillment Pipeline
 * **Lifecycle State Machine**: Move customer orders across 5 clear fulfillment stages:
   $$\text{Pending} \longrightarrow \text{Processing} \longrightarrow \text{Shipped} \longrightarrow \text{Delivered} \quad (\text{or } \text{Cancelled})$$
 * **Detailed Order Inspector**: Inspect shipping addresses, recipient contact numbers, email addresses, ordered package sizes, unit quantities, and payment methods.
-* **Instant Filter & Search**: Search orders on the fly by Order ID, customer name, email, or city with real-time status filtering.
+* **Search & Status Filter Dropdown**: Real-time search by Order ID, customer, phone, or city paired side-by-side with a color-coded status dropdown (*All Orders*, *Pending*, *Processing*, *Shipped*, *Delivered*, *Cancelled*) displaying live order count badges.
 
 ### 4. 🍽️ Gourmet Recipes Studio (Shimi's Kitchen)
 * **Collaborative Recipe Archive**: Create, update, and organize gourmet dishes featuring Alleppey green cardamom (Cardamom Rasmalai, Pistachio Latte, Elaichi Milk Tea, Elaichi Payasam).
+* **Search & Category Filter Dropdown**: Unified search input paired side-by-side with a scrollable culinary tag dropdown featuring recipe counters per category and instant reset.
 * **Structured Preparation Details**: Set preparation time, cooking time, difficulty level, chef author, servings, and tags.
 * **Ingredient & Step Builder**: Drag-and-drop enabled ingredient checklists and numbered cooking directions.
 

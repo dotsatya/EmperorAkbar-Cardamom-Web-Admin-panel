@@ -91,9 +91,9 @@
 
 .dark {
   --color-bg-primary: #001D06;
-  --background: #001D06;
+  --background: #000902;
   --foreground: #f4f1ea;
-  --card: #04240d;
+  --card: #031d0bcc;
   --card-foreground: #f4f1ea;
   --popover: #04240d;
   --popover-foreground: #f4f1ea;
@@ -111,7 +111,7 @@
   --input: rgba(244, 241, 234, 0.15);
   --ring: #d4af37;
 
-  --sidebar: #011605;
+  --sidebar: #000902;
   --sidebar-foreground: #f4f1ea;
   --sidebar-primary: #d4af37;
   --sidebar-primary-foreground: #001D06;

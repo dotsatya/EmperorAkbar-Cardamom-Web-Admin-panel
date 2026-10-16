@@ -14,7 +14,18 @@ import {
   Plus,
   Pencil,
   Check,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { websiteData } from "@/data/websiteData";
 
 export interface RecipeIngredient {
@@ -111,6 +122,23 @@ export default function RecipesView({}: RecipesViewProps) {
   });
 
   const allTags = ["All", ...(websiteData.recipes.tags?.filter((t) => t !== "All") || [])];
+
+  const tagFilterOptions = allTags.map((tag) => ({
+    id: tag,
+    label: tag === "All" ? "All Recipes" : `#${tag}`,
+    count:
+      tag === "All"
+        ? recipesList.length
+        : recipesList.filter(
+            (r) =>
+              r.tags &&
+              r.tags.some((t: string) => t.toLowerCase() === tag.toLowerCase())
+          ).length,
+  }));
+
+  const activeTagFilter =
+    tagFilterOptions.find((opt) => opt.id.toLowerCase() === selectedTag.toLowerCase()) ||
+    tagFilterOptions[0];
 
   const filteredRecipes = recipesList.filter((r) => {
     const matchesSearch =
@@ -370,34 +398,111 @@ export default function RecipesView({}: RecipesViewProps) {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             placeholder="Search recipes by name, ingredient, or culinary tag..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
+            className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Quick Tag Pills */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {allTags.slice(0, 8).map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
-                selectedTag === tag
-                  ? "bg-[#d4af37] text-stone-900 font-bold shadow-xs"
-                  : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-[#d4af37]/40"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
+        {/* Tag / Category Filter Dropdown on Right Side */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={`h-[38px] px-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2.5 transition-all cursor-pointer shadow-xs shrink-0 select-none ${
+              selectedTag !== "All"
+                ? "bg-[#d4af37]/10 border-[#d4af37]/40 text-[#b89528] dark:text-[#d4af37] font-bold"
+                : "bg-card border-border text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Filter
+                className={`w-3.5 h-3.5 ${
+                  selectedTag !== "All"
+                    ? "text-[#d4af37]"
+                    : "text-muted-foreground"
+                }`}
+              />
+              <span>{activeTagFilter.label}</span>
+              {selectedTag !== "All" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+              )}
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-1" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            side="bottom"
+            sideOffset={6}
+            className="min-w-48 w-56 max-h-72 overflow-y-auto p-1.5 rounded-xl border border-border bg-popover shadow-xl text-popover-foreground z-50"
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Filter by Category
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 border-border" />
+              {tagFilterOptions.map((tag) => {
+                const isSelected =
+                  selectedTag.toLowerCase() === tag.id.toLowerCase();
+                return (
+                  <DropdownMenuItem
+                    key={tag.id}
+                    onClick={() => setSelectedTag(tag.id)}
+                    className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-[#d4af37]/15 text-stone-900 dark:text-[#d4af37] font-semibold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          tag.id === "All"
+                            ? "bg-muted-foreground"
+                            : "bg-[#d4af37]"
+                        }`}
+                      />
+                      <span>{tag.label}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                        {tag.count}
+                      </span>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-[#d4af37]" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
+            {selectedTag !== "All" && (
+              <>
+                <DropdownMenuSeparator className="my-1 border-border" />
+                <DropdownMenuItem
+                  onClick={() => setSelectedTag("All")}
+                  className="flex items-center justify-center py-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
+                >
+                  Reset to All Recipes
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Recipes Grid: 3 in a row */}
