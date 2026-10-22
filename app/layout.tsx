@@ -14,6 +14,10 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Emperor Akbar - Admin Suite",
   description: "E-Commerce CMS & Admin Control Center for Emperor Akbar cardamom",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
