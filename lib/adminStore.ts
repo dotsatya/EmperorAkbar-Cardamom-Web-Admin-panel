@@ -150,7 +150,7 @@ export function normalizeCardamomProduct(
   const defaultWeight = p.defaultWeight || p.weight || availableWeights[0] || "100 gm";
   const grade = p.grade || "Purple";
   const diameterSpec = p.diameterSpec || p.size || grade;
-  const slug = p.slug || p.id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const slug = p.slug || p.id || (p.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
   return {
     id: p.id,
@@ -469,6 +469,75 @@ const DEFAULT_ORDERS: UserOrder[] = [
   },
 ];
 
+export function normalizeGradeItem(
+  g: Record<string, unknown> | Partial<GradeItem> | null | undefined,
+  idx: number
+): GradeItem {
+  const fallbackColors = ["Purple", "Pink", "Green", "Orange", "Red"];
+  const fallbackDiameters = [
+    "8.0 mm & Above",
+    "7.5 mm – 8.0 mm",
+    "7.0 mm – 7.5 mm",
+    "6.5 mm – 7.0 mm",
+    "6.0 mm – 6.5 mm",
+  ];
+  const fallbackDescriptions = [
+    "Premium large pods (8mm & above) with highest aroma concentration",
+    "Large pods (7.5mm – 8mm) with exceptional gourmet flavor",
+    "Medium-large pods (7mm – 7.5mm) with authentic Alleppey sweetness",
+    "Medium pods (6.5mm – 7mm) ideal for aromatic culinary blending",
+    "Smaller pods (6mm – 6.5mm) with standard essential oil content",
+  ];
+
+  const rawColor = (g as Record<string, unknown>)?.color;
+  const rawName = (g as Record<string, unknown>)?.name;
+  const rawSize = (g as Record<string, unknown>)?.size;
+  const rawDiameter = (g as Record<string, unknown>)?.diameter;
+  const rawDescription = (g as Record<string, unknown>)?.description;
+
+  const colorStr = typeof rawColor === "string" ? rawColor : "";
+  const nameStr = typeof rawName === "string" ? rawName : "";
+
+  const color =
+    colorStr ||
+    (nameStr.includes("Purple")
+      ? "Purple"
+      : nameStr.includes("Pink")
+      ? "Pink"
+      : nameStr.includes("Green")
+      ? "Green"
+      : nameStr.includes("Orange")
+      ? "Orange"
+      : nameStr.includes("Red")
+      ? "Red"
+      : fallbackColors[idx] || "Standard");
+
+  const name =
+    nameStr.trim()
+      ? nameStr
+      : `${color} Grade Cardamom`;
+
+  const size =
+    typeof rawSize === "string" && rawSize.trim()
+      ? rawSize
+      : typeof rawDiameter === "string" && rawDiameter.trim()
+      ? rawDiameter
+      : fallbackDiameters[idx] || "Standard";
+
+  const description =
+    typeof rawDescription === "string" && rawDescription.trim()
+      ? rawDescription
+      : fallbackDescriptions[idx] || "";
+
+  return {
+    name,
+    color,
+    size,
+    diameter: size,
+    description,
+  };
+}
+
 export function getInitialCMSData(): WebsiteCMSData {
   return {
     settings: {
@@ -528,7 +597,9 @@ export function getInitialCMSData(): WebsiteCMSData {
         })),
       },
     ],
-    grading: (defaultData.about.grading as unknown as GradeItem[]) || [],
+    grading: ((defaultData.about?.grading || []) as unknown as Record<string, unknown>[]).map(
+      (g, idx) => normalizeGradeItem(g, idx)
+    ),
     healthTopics: (defaultData.healthData.topics as unknown as HealthTopic[]) || [],
   };
 }
@@ -548,6 +619,11 @@ export function loadCMSData(): WebsiteCMSData {
     if (Array.isArray(parsed.products)) {
       parsed.products = parsed.products.map((p: Partial<CardamomProduct> & { id: string; name: string }) =>
         normalizeCardamomProduct(p)
+      );
+    }
+    if (Array.isArray(parsed.grading)) {
+      parsed.grading = parsed.grading.map((g: Record<string, unknown>, idx: number) =>
+        normalizeGradeItem(g, idx),
       );
     }
     return parsed;

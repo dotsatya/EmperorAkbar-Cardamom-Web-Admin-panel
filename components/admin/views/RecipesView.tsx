@@ -16,6 +16,7 @@ import {
   Check,
   Filter,
   ChevronDown,
+  Trash2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -367,6 +368,24 @@ export default function RecipesView({}: RecipesViewProps) {
     setEditingRecipe(null);
   };
 
+  const getDifficultyBadge = (difficulty?: string) => {
+    const d = (difficulty || "").toLowerCase();
+    if (d.includes("easy"))
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+    if (d.includes("hard") || d.includes("adv"))
+      return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20";
+    return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+  };
+
+  const handleDeleteRecipe = (id: string, title: string) => {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      setRecipesList((prev) => prev.filter((r) => r.id !== id));
+      if (selectedRecipe && selectedRecipe.id === id) {
+        setSelectedRecipe(null);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -505,110 +524,176 @@ export default function RecipesView({}: RecipesViewProps) {
         </DropdownMenu>
       </div>
 
-      {/* Recipes Grid: 3 in a row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredRecipes.map((recipe) => {
-          const imgSrc = getImageSrc(recipe.image);
-          const prepTime = recipe.content?.recipeInfo?.preparationTime || "15 mins";
-          const cookTime = recipe.content?.recipeInfo?.cookingTime || "30 mins";
-          const servings = recipe.content?.recipeInfo?.servings || "4 servings";
-          const difficulty = recipe.content?.recipeInfo?.difficulty || "Easy";
+      {/* Recipes Table Container */}
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm transition-colors">
+        {filteredRecipes.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <UtensilsCrossed className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-foreground text-sm font-semibold">No recipes matched</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search query or tag filter</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted text-muted-foreground uppercase font-bold tracking-wider text-[10px] border-b border-border">
+                <tr>
+                  <th className="py-3.5 px-4">Recipe</th>
+                  <th className="py-3.5 px-4">Category & Tags</th>
+                  <th className="py-3.5 px-4">Timing & Servings</th>
+                  <th className="py-3.5 px-4">Difficulty</th>
+                  <th className="py-3.5 px-4">Ingredients & Steps</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredRecipes.map((recipe) => {
+                  const imgSrc = getImageSrc(recipe.image);
+                  const prepTime =
+                    recipe.content?.recipeInfo?.preparationTime ||
+                    recipe.prepTime ||
+                    "15 mins";
+                  const cookTime =
+                    recipe.content?.recipeInfo?.cookingTime ||
+                    recipe.cookTime ||
+                    "30 mins";
+                  const servings =
+                    recipe.content?.recipeInfo?.servings ||
+                    recipe.servings ||
+                    "4 servings";
+                  const difficulty =
+                    recipe.content?.recipeInfo?.difficulty ||
+                    recipe.difficulty ||
+                    "Easy";
+                  const category =
+                    recipe.content?.recipeInfo?.category ||
+                    recipe.category ||
+                    "Gourmet";
+                  const ingredientsCount =
+                    recipe.content?.ingredientGroups?.[0]?.ingredients?.length ||
+                    recipe.content?.ingredientGroups?.[0]?.items?.length ||
+                    "Multiple";
+                  const stepsCount =
+                    recipe.content?.steps?.length || 4;
 
-          return (
-            <div
-              key={recipe.id}
-              className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:border-[#d4af37]/40 transition-all text-card-foreground group"
-            >
-              <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3">
-                {/* Left Side: Tags, Title, Description */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                    {recipe.tags?.slice(0, 2).map((tag: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted border border-border text-muted-foreground"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <h3 className="text-sm font-bold text-foreground mb-1.5 leading-snug line-clamp-2">
-                    {recipe.title}
-                  </h3>
-
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2.5">
-                    {recipe.description}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground font-medium">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-[#d4af37]" />
-                      {prepTime}
-                    </span>
-                    <span>&bull;</span>
-                    <span className="flex items-center gap-1">
-                      <Flame className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                      {cookTime}
-                    </span>
-                    <span>&bull;</span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                      {servings}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right Side: Image */}
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-muted border border-border overflow-hidden shrink-0 relative">
-                  {imgSrc ? (
-                    <img
-                      src={imgSrc}
-                      alt={recipe.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <ChefHat className="w-6 h-6" />
-                    </div>
-                  )}
-                  <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/70 text-white backdrop-blur-xs">
-                    {difficulty}
-                  </span>
-                </div>
-              </div>
-
-              {/* Bottom Footer */}
-              <div className="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                <span className="text-[11px] text-muted-foreground italic truncate max-w-[110px]">
-                  By {recipe.author}
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(recipe)}
-                    className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 hover:border-[#d4af37]/50 transition-colors inline-flex items-center gap-1 font-semibold text-[11px] cursor-pointer"
-                    title="Edit Recipe"
-                  >
-                    <Pencil className="w-3 h-3 text-[#d4af37]" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRecipe(recipe)}
-                    className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-stone-900 hover:bg-[#e5bf45] transition-colors inline-flex items-center gap-1 font-bold text-[11px] cursor-pointer"
-                    title="Inspect Recipe"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Inspect</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                  return (
+                    <tr
+                      key={recipe.id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-muted/60 border border-border shrink-0 relative overflow-hidden flex items-center justify-center">
+                            {imgSrc ? (
+                              <img
+                                src={imgSrc}
+                                alt={recipe.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ChefHat className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-[240px]">
+                              {recipe.title}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground italic truncate max-w-[180px] mt-0.5">
+                              By {recipe.author || "Emperor Akbar Culinary"}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/15 text-[#b89528] dark:text-[#d4af37] border border-[#d4af37]/30">
+                            {category}
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {recipe.tags?.slice(0, 2).map((tag: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.2 rounded-md bg-muted text-[10px] text-muted-foreground font-mono"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-1 text-muted-foreground">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3 h-3 text-[#d4af37]" />
+                            <span>Prep: {prepTime}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Flame className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Cook: {cookTime}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <Users className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                            <span>{servings}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getDifficultyBadge(
+                            difficulty,
+                          )}`}
+                        >
+                          {difficulty}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-muted-foreground">
+                        <div className="text-foreground font-medium">
+                          {typeof ingredientsCount === "number"
+                            ? `${ingredientsCount} Ingredients`
+                            : ingredientsCount}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          {stepsCount} Preparation Steps
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecipe(recipe)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-stone-900 hover:bg-[#e5bf45] transition-colors inline-flex items-center gap-1 font-bold text-[11px] cursor-pointer"
+                            title="Inspect Recipe"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Inspect</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(recipe)}
+                            className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 hover:border-[#d4af37]/50 transition-colors inline-flex items-center gap-1 font-semibold text-[11px] cursor-pointer"
+                            title="Edit Recipe"
+                          >
+                            <Pencil className="w-3 h-3 text-[#d4af37]" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteRecipe(recipe.id, recipe.title)
+                            }
+                            className="w-7 h-7 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/20 transition-colors flex items-center justify-center cursor-pointer"
+                            title="Delete Recipe"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Add New Recipe Modal */}

@@ -10,7 +10,19 @@ import {
   Plus,
   Pencil,
   Check,
+  Filter,
+  ChevronDown,
+  Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { websiteData } from "@/data/websiteData";
 
 export interface BlogSection {
@@ -74,12 +86,97 @@ export default function BlogsView({}: BlogsViewProps) {
     sectionContentText: "",
   });
 
-  const filteredBlogs = blogsList.filter(
-    (b) =>
-      b.title.toLowerCase().includes(search.toLowerCase()) ||
-      b.description.toLowerCase().includes(search.toLowerCase()) ||
-      (b.tags && b.tags.some((t: string) => t.toLowerCase().includes(search.toLowerCase())))
-  );
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const blogCategories = [
+    { id: "all", label: "All Categories", count: blogsList.length },
+    {
+      id: "market",
+      label: "Market Insights",
+      count: blogsList.filter(
+        (b) =>
+          b.category?.toLowerCase().includes("market") ||
+          b.title.toLowerCase().includes("market") ||
+          b.description.toLowerCase().includes("market") ||
+          b.tags?.some((t) => t.toLowerCase().includes("market")),
+      ).length,
+    },
+    {
+      id: "harvest",
+      label: "Harvest & Grades",
+      count: blogsList.filter(
+        (b) =>
+          b.category?.toLowerCase().includes("harvest") ||
+          b.title.toLowerCase().includes("harvest") ||
+          b.description.toLowerCase().includes("grade") ||
+          b.tags?.some((t) => t.toLowerCase().includes("harvest") || t.toLowerCase().includes("grade")),
+      ).length,
+    },
+    {
+      id: "culinary",
+      label: "Culinary & Recipes",
+      count: blogsList.filter(
+        (b) =>
+          b.category?.toLowerCase().includes("recipe") ||
+          b.title.toLowerCase().includes("recipe") ||
+          b.tags?.some((t) => t.toLowerCase().includes("recipe") || t.toLowerCase().includes("culinary")),
+      ).length,
+    },
+    {
+      id: "wellness",
+      label: "Health & Ayurveda",
+      count: blogsList.filter(
+        (b) =>
+          b.category?.toLowerCase().includes("health") ||
+          b.description.toLowerCase().includes("health") ||
+          b.tags?.some((t) => t.toLowerCase().includes("health") || t.toLowerCase().includes("ayurved")),
+      ).length,
+    },
+  ];
+
+  const activeCategory =
+    blogCategories.find((c) => c.id === categoryFilter) || blogCategories[0];
+
+  const filteredBlogs = blogsList.filter((b) => {
+    const searchLower = search.toLowerCase();
+    const matchesSearch =
+      b.title.toLowerCase().includes(searchLower) ||
+      b.description.toLowerCase().includes(searchLower) ||
+      (b.tags && b.tags.some((t: string) => t.toLowerCase().includes(searchLower))) ||
+      (b.author && b.author.toLowerCase().includes(searchLower));
+
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (categoryFilter === "market" &&
+        (b.category?.toLowerCase().includes("market") ||
+          b.title.toLowerCase().includes("market") ||
+          b.description.toLowerCase().includes("market") ||
+          b.tags?.some((t) => t.toLowerCase().includes("market")))) ||
+      (categoryFilter === "harvest" &&
+        (b.category?.toLowerCase().includes("harvest") ||
+          b.title.toLowerCase().includes("harvest") ||
+          b.description.toLowerCase().includes("grade") ||
+          b.tags?.some((t) => t.toLowerCase().includes("harvest") || t.toLowerCase().includes("grade")))) ||
+      (categoryFilter === "culinary" &&
+        (b.category?.toLowerCase().includes("recipe") ||
+          b.title.toLowerCase().includes("recipe") ||
+          b.tags?.some((t) => t.toLowerCase().includes("recipe") || t.toLowerCase().includes("culinary")))) ||
+      (categoryFilter === "wellness" &&
+        (b.category?.toLowerCase().includes("health") ||
+          b.description.toLowerCase().includes("health") ||
+          b.tags?.some((t) => t.toLowerCase().includes("health") || t.toLowerCase().includes("ayurved"))));
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleDeleteBlog = (id: string, title: string) => {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      setBlogsList((prev) => prev.filter((b) => b.id !== id));
+      if (selectedBlog && selectedBlog.id === id) {
+        setSelectedBlog(null);
+      }
+    }
+  };
 
   const getImageSrc = (img: unknown): string => {
     if (!img) return "";
@@ -266,96 +363,231 @@ export default function BlogsView({}: BlogsViewProps) {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search articles by headline, keywords, or tags..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
-        />
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search articles by headline, keywords, or tags..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Category Filter Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={`h-[38px] px-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2.5 transition-all cursor-pointer shadow-xs shrink-0 select-none ${
+              categoryFilter !== "all"
+                ? "bg-[#d4af37]/10 border-[#d4af37]/40 text-[#b89528] dark:text-[#d4af37] font-bold"
+                : "bg-card border-border text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Filter
+                className={`w-3.5 h-3.5 ${
+                  categoryFilter !== "all"
+                    ? "text-[#d4af37]"
+                    : "text-muted-foreground"
+                }`}
+              />
+              <span>{activeCategory.label}</span>
+              {categoryFilter !== "all" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+              )}
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-1" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            side="bottom"
+            sideOffset={6}
+            className="min-w-48 w-56 p-1.5 rounded-xl border border-border bg-popover shadow-xl text-popover-foreground z-50"
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Filter by Category
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-1 border-border" />
+              {blogCategories.map((cat) => {
+                const isSelected = categoryFilter === cat.id;
+                return (
+                  <DropdownMenuItem
+                    key={cat.id}
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-[#d4af37]/15 text-stone-900 dark:text-[#d4af37] font-semibold"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                        {cat.count}
+                      </span>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-[#d4af37]" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
+            {categoryFilter !== "all" && (
+              <>
+                <DropdownMenuSeparator className="my-1 border-border" />
+                <DropdownMenuItem
+                  onClick={() => setCategoryFilter("all")}
+                  className="flex items-center justify-center py-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
+                >
+                  Reset to All Categories
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Blogs List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredBlogs.map((blog) => {
-          const imgSrc = getImageSrc(blog.image);
-          return (
-            <div
-              key={blog.id}
-              className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between hover:border-[#d4af37]/40 transition-all text-card-foreground group"
-            >
-              <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3">
-                {/* Left Side: Tags, Title, Description */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                    {blog.tags?.slice(0, 2).map((tag: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted border border-border text-muted-foreground"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
+      {/* Articles Table Container */}
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm transition-colors">
+        {filteredBlogs.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-foreground text-sm font-semibold">No articles matched</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search query or category filter</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted text-muted-foreground uppercase font-bold tracking-wider text-[10px] border-b border-border">
+                <tr>
+                  <th className="py-3.5 px-4">Article</th>
+                  <th className="py-3.5 px-4">Category & Author</th>
+                  <th className="py-3.5 px-4">Slug Identifier</th>
+                  <th className="py-3.5 px-4">Tags</th>
+                  <th className="py-3.5 px-4">Sections</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredBlogs.map((blog) => {
+                  const imgSrc = getImageSrc(blog.image);
+                  const sectionsCount = blog.content?.sections?.length || 1;
+                  const introParagraphs = blog.content?.introduction?.length || 1;
 
-                  <h3 className="text-sm font-bold text-foreground mb-1.5 leading-snug line-clamp-2">
-                    {blog.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {blog.description}
-                  </p>
-                </div>
-
-                {/* Right Side: Image */}
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-muted border border-border overflow-hidden shrink-0 relative">
-                  {imgSrc ? (
-                    <img
-                      src={imgSrc}
-                      alt={blog.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Bottom Footer */}
-              <div className="pt-3 border-t border-border flex items-center justify-between mt-auto">
-                <span className="text-[11px] text-muted-foreground font-mono truncate max-w-[110px]">
-                  {blog.slug.slice(0, 18)}...
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(blog)}
-                    className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 hover:border-[#d4af37]/50 transition-colors inline-flex items-center gap-1 font-semibold text-[11px] cursor-pointer"
-                    title="Edit Article"
-                  >
-                    <Pencil className="w-3 h-3 text-[#d4af37]" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBlog(blog)}
-                    className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-stone-900 hover:bg-[#e5bf45] transition-colors inline-flex items-center gap-1 font-bold text-[11px] cursor-pointer"
-                    title="Inspect Article"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Inspect</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                  return (
+                    <tr
+                      key={blog.id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-muted/60 border border-border shrink-0 relative overflow-hidden flex items-center justify-center">
+                            {imgSrc ? (
+                              <img
+                                src={imgSrc}
+                                alt={blog.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <FileText className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-[260px]">
+                              {blog.title}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground line-clamp-1 max-w-[240px] mt-0.5">
+                              {blog.description}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/15 text-[#b89528] dark:text-[#d4af37] border border-[#d4af37]/30">
+                            {blog.category || "Editorial"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground italic">
+                            By {blog.author || "Emperor Akbar Editorial"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="text-[11px] font-mono text-muted-foreground truncate block max-w-[150px]">
+                          /{blog.slug}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-wrap gap-1 max-w-[160px]">
+                          {blog.tags?.slice(0, 2).map((tag: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-1.5 py-0.5 rounded-md bg-muted text-[10px] text-muted-foreground font-mono"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-muted-foreground">
+                        <div className="text-foreground font-medium">
+                          {sectionsCount} {sectionsCount === 1 ? "Section" : "Sections"}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {introParagraphs} Intro {introParagraphs === 1 ? "Paragraph" : "Paragraphs"}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBlog(blog)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-stone-900 hover:bg-[#e5bf45] transition-colors inline-flex items-center gap-1 font-bold text-[11px] cursor-pointer"
+                            title="Inspect Article"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Inspect</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(blog)}
+                            className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 hover:border-[#d4af37]/50 transition-colors inline-flex items-center gap-1 font-semibold text-[11px] cursor-pointer"
+                            title="Edit Article"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-[#d4af37]" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBlog(blog.id, blog.title)}
+                            className="w-7 h-7 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/20 transition-colors flex items-center justify-center cursor-pointer"
+                            title="Delete Article"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Article Detail Modal */}

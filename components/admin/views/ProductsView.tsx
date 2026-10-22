@@ -12,6 +12,7 @@ import {
   Filter,
   ChevronDown,
   Check,
+  Eye,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -48,6 +49,9 @@ export default function ProductsView({
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState("all");
   const [editingProduct, setEditingProduct] = useState<CardamomProduct | null>(
+    null,
+  );
+  const [inspectingProduct, setInspectingProduct] = useState<CardamomProduct | null>(
     null,
   );
   const [isCreating, setIsCreating] = useState(openCreateModalDirectly);
@@ -239,6 +243,31 @@ export default function ProductsView({
     }
   };
 
+  const getGradeBadgeStyle = (grade?: string) => {
+    const g = (grade || "").toLowerCase();
+    if (g.includes("purple"))
+      return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20";
+    if (g.includes("pink"))
+      return "bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20";
+    if (g.includes("green"))
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+    if (g.includes("orange"))
+      return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20";
+    if (g.includes("yellow"))
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+    return "bg-stone-500/10 text-stone-600 dark:text-stone-400 border border-stone-500/20";
+  };
+
+  const getInventoryBadge = (isSoldOut: boolean, badgeText: string) => {
+    if (isSoldOut || badgeText.toLowerCase().includes("sold out")) {
+      return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20";
+    }
+    if (badgeText.toLowerCase().includes("sale")) {
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+    }
+    return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Controls */}
@@ -374,159 +403,216 @@ export default function ProductsView({
         </DropdownMenu>
       </div>
 
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredProducts.map((product) => {
-          const isSoldOut =
-            product.inventoryStatus === "Out of Stock (Sold Out)" ||
-            !product.inStock ||
-            product.badge === "Sold Out" ||
-            product.tag === "Sold Out";
-          const displayPrice = product.sellingPrice ?? product.price ?? 0;
-          const displayOriginalPrice = product.originalPrice;
-          const badgeText = isSoldOut
-            ? "Sold Out"
-            : product.badge || product.tag || "In Stock";
-          const gradeText = product.diameterSpec || product.grade;
-          const imageSrc = getStaticSrc(product.imageUrl || product.image, "");
+      {/* Products Table */}
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm transition-colors">
+        {filteredProducts.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <ShoppingBag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-foreground text-sm font-semibold">No products matched</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search query or filter</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted text-muted-foreground uppercase font-bold tracking-wider text-[10px] border-b border-border">
+                <tr>
+                  <th className="py-3.5 px-4">Product</th>
+                  <th className="py-3.5 px-4">Grade & Spec</th>
+                  <th className="py-3.5 px-4">Pricing</th>
+                  <th className="py-3.5 px-4">Weights</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredProducts.map((product) => {
+                  const isSoldOut =
+                    product.inventoryStatus === "Out of Stock (Sold Out)" ||
+                    !product.inStock ||
+                    product.badge === "Sold Out" ||
+                    product.tag === "Sold Out";
+                  const displayPrice = product.sellingPrice ?? product.price ?? 0;
+                  const displayOriginalPrice = product.originalPrice;
+                  const badgeText = isSoldOut
+                    ? "Sold Out"
+                    : product.badge || product.tag || "In Stock";
+                  const gradeText = product.diameterSpec || product.grade || "Standard";
+                  const imageSrc = getStaticSrc(product.imageUrl || product.image, "");
+                  const savings =
+                    displayOriginalPrice && displayOriginalPrice > displayPrice
+                      ? Math.round(
+                          ((displayOriginalPrice - displayPrice) /
+                            displayOriginalPrice) *
+                            100,
+                        )
+                      : 0;
 
-          return (
-            <div
-              key={product.id}
-              className="bg-card border border-border rounded-2xl p-5 shadow-sm relative flex flex-col justify-between hover:border-primary/40 dark:hover:border-[#d4af37]/40 transition-all group text-card-foreground"
-            >
-              <div>
-                {/* Header / Badges */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        isSoldOut
-                          ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30"
-                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
-                      }`}
+                  return (
+                    <tr
+                      key={product.id}
+                      className="hover:bg-muted/50 transition-colors"
                     >
-                      {badgeText}
-                    </span>
-                    {gradeText && (
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {gradeText}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1.5 opacity-90">
-                    <button
-                      onClick={() =>
-                        handleDeleteProduct(product.id, product.name)
-                      }
-                      className="w-8 h-8 rounded-lg bg-destructive/10 hover:bg-destructive text-destructive hover:text-destructive-foreground border border-destructive/20 transition-colors flex items-center justify-center cursor-pointer"
-                      title="Delete Product"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Product Image & Info */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-20 h-20 rounded-xl bg-muted/40 border border-border p-2 shrink-0 relative overflow-hidden flex items-center justify-center">
-                    {imageSrc ? (
-                      <img
-                        src={imageSrc}
-                        alt={product.imageAlt || product.name}
-                        onError={(e) => {
-                          const fb =
-                            DEFAULT_GRADE_IMAGES[product.id] ||
-                            DEFAULT_GRADE_IMAGES["purple-grade"];
-                          if (fb && !e.currentTarget.src.includes(fb)) {
-                            e.currentTarget.src = fb;
-                          }
-                        }}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <ShoppingBag className="w-8 h-8 text-muted-foreground" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-foreground leading-tight mb-1 truncate">
-                      {product.name}
-                    </h3>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                      {product.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Available Weights */}
-                <div className="mb-4">
-                  <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">
-                    Available Variants:
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(
-                      product.availableWeights ||
-                      product.weights || ["100 gm"]
-                    ).map((w) => (
-                      <span
-                        key={w}
-                        className="px-2 py-0.5 rounded-md bg-muted/60 border border-border text-[10px] font-mono text-muted-foreground"
-                      >
-                        {w}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Price & Quick Edit CTA */}
-              <div className="pt-3 border-t border-border flex items-center justify-between">
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-lg font-bold font-sans text-primary dark:text-[#d4af37]">
-                      ₹{displayPrice}
-                    </span>
-                    {displayOriginalPrice &&
-                      displayOriginalPrice > displayPrice && (
-                        <span className="text-xs text-muted-foreground line-through">
-                          ₹{displayOriginalPrice}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-xl bg-muted/60 border border-border p-1.5 shrink-0 relative overflow-hidden flex items-center justify-center">
+                            {imageSrc ? (
+                              <img
+                                src={imageSrc}
+                                alt={product.imageAlt || product.name}
+                                onError={(e) => {
+                                  const fb =
+                                    DEFAULT_GRADE_IMAGES[product.id] ||
+                                    DEFAULT_GRADE_IMAGES["purple-grade"];
+                                  if (fb && !e.currentTarget.src.includes(fb)) {
+                                    e.currentTarget.src = fb;
+                                  }
+                                }}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <ShoppingBag className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-[260px]">
+                              {product.name}
+                            </div>
+                            <div className="text-[10px] font-mono text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                              <span>ID: {product.id}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getGradeBadgeStyle(
+                              gradeText,
+                            )}`}
+                          >
+                            {product.grade || "Grade"}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground font-mono">
+                            {product.diameterSpec || gradeText}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="font-bold text-foreground text-sm">
+                            ₹{displayPrice.toLocaleString("en-IN")}
+                          </span>
+                          {displayOriginalPrice &&
+                            displayOriginalPrice > displayPrice && (
+                              <span className="text-[11px] text-muted-foreground line-through">
+                                ₹{displayOriginalPrice.toLocaleString("en-IN")}
+                              </span>
+                            )}
+                        </div>
+                        {savings > 0 && (
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            {savings}% OFF
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-muted-foreground">
+                        <div className="flex flex-wrap gap-1 max-w-[150px]">
+                          <span className="px-2 py-0.5 rounded-md bg-[#d4af37]/15 text-[#b89528] dark:text-[#d4af37] font-semibold text-[10px] border border-[#d4af37]/30">
+                            {product.defaultWeight ||
+                              product.weight ||
+                              "100 gm"}
+                          </span>
+                          {(
+                            product.availableWeights ||
+                            product.weights ||
+                            []
+                          )
+                            .filter(
+                              (w) =>
+                                w !==
+                                (product.defaultWeight ||
+                                  product.weight ||
+                                  "100 gm"),
+                            )
+                            .slice(0, 2)
+                            .map((w) => (
+                              <span
+                                key={w}
+                                className="px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-mono"
+                              >
+                                {w}
+                              </span>
+                            ))}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getInventoryBadge(
+                            isSoldOut,
+                            badgeText,
+                          )}`}
+                        >
+                          {badgeText}
                         </span>
-                      )}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    Default:{" "}
-                    {product.defaultWeight || product.weight || "100 gm"}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => handleOpenEdit(product)}
-                  className="px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted text-foreground border border-border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Edit2 className="w-3 h-3 text-primary dark:text-[#d4af37]" />
-                  <span>Edit Details</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setInspectingProduct(product)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-stone-900 hover:bg-[#e5bf45] transition-colors inline-flex items-center gap-1 font-bold text-[11px] cursor-pointer"
+                            title="Inspect Product"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Inspect</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(product)}
+                            className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 hover:border-[#d4af37]/50 transition-colors inline-flex items-center gap-1 font-semibold text-[11px] cursor-pointer"
+                            title="Edit Product"
+                          >
+                            <Edit2 className="w-3.5 h-3.5 text-[#d4af37]" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteProduct(product.id, product.name)
+                            }
+                            className="w-7 h-7 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/20 transition-colors flex items-center justify-center cursor-pointer"
+                            title="Delete Product"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Edit / Create Modal */}
       {(editingProduct || isCreating) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white dark:bg-[#18181b] border border-[#e8e2d5] dark:border-stone-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl my-8 relative max-h-[90vh] overflow-y-auto text-card-foreground">
-            <div className="flex items-center justify-between pb-4 border-b border-[#ece6d9] dark:border-stone-800 mb-6">
-              <h3 className="text-lg font-bold font-sans text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                {isCreating
-                  ? "Add New Cardamom Grade Product"
-                  : `Edit Product: ${editingProduct?.name}`}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in">
+          <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl my-8 relative max-h-[90vh] overflow-y-auto text-foreground">
+            <div className="flex items-center justify-between pb-4 border-b border-border mb-6">
+              <h3 className="text-lg font-bold font-sans text-foreground flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-[#d4af37]" />
+                <span>
+                  {isCreating
+                    ? "Add New Cardamom Grade Product"
+                    : `Edit Product: ${editingProduct?.name}`}
+                </span>
               </h3>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="w-8 h-8 rounded-lg bg-[#f4efe6] dark:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-muted text-foreground hover:bg-accent flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -534,11 +620,11 @@ export default function ProductsView({
 
             <form
               onSubmit={handleSaveForm}
-              className="space-y-4 text-xs sm:text-sm"
+              className="space-y-4 text-xs"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Product Name
                   </label>
                   <input
@@ -549,12 +635,12 @@ export default function ProductsView({
                       setFormState({ ...formState, name: e.target.value })
                     }
                     placeholder="Purple Grade (8 mm & above) Cardamom"
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Pod Grade / Diameter Spec
                   </label>
                   <input
@@ -568,12 +654,12 @@ export default function ProductsView({
                       })
                     }
                     placeholder="Purple"
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Selling Price (₹)
                   </label>
                   <input
@@ -587,12 +673,12 @@ export default function ProductsView({
                         price: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Original / MRP Price (₹)
                   </label>
                   <input
@@ -604,12 +690,12 @@ export default function ProductsView({
                         originalPrice: Number(e.target.value),
                       })
                     }
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Badge Tag
                   </label>
                   <select
@@ -627,10 +713,10 @@ export default function ProductsView({
                         inStock: badge !== "Sold Out",
                       });
                     }}
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
                   >
                     {cardamomBadgeOptions.map((opt) => (
-                      <option key={opt} value={opt}>
+                      <option key={opt} value={opt} className="bg-card text-foreground">
                         {opt}
                       </option>
                     ))}
@@ -638,7 +724,7 @@ export default function ProductsView({
                 </div>
 
                 <div>
-                  <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                  <label className="block text-foreground font-semibold mb-1.5">
                     Inventory Status
                   </label>
                   <select
@@ -668,10 +754,10 @@ export default function ProductsView({
                               : formState.tag,
                       });
                     }}
-                    className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
+                    className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground focus:outline-none focus:border-[#d4af37] transition-all cursor-pointer"
                   >
                     {inventoryStatusOptions.map((opt) => (
-                      <option key={opt} value={opt}>
+                      <option key={opt} value={opt} className="bg-card text-foreground">
                         {opt}
                       </option>
                     ))}
@@ -680,7 +766,7 @@ export default function ProductsView({
               </div>
 
               <div>
-                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                <label className="block text-foreground font-semibold mb-1.5">
                   Product Image URL
                 </label>
                 <input
@@ -697,12 +783,12 @@ export default function ProductsView({
                     })
                   }
                   placeholder="/images/cardamom/... or https://..."
-                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
+                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                <label className="block text-foreground font-semibold mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -712,12 +798,12 @@ export default function ProductsView({
                     setFormState({ ...formState, description: e.target.value })
                   }
                   placeholder="Versatile spice, chef recommended, ideal for the discerning home consumer"
-                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl p-4 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all resize-y"
+                  className="w-full bg-muted border border-border rounded-xl p-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all resize-y leading-relaxed"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-900 dark:text-stone-100 font-semibold mb-2 text-xs sm:text-sm">
+                <label className="block text-foreground font-semibold mb-1.5">
                   Available Weights (Comma separated)
                 </label>
                 <input
@@ -739,26 +825,193 @@ export default function ProductsView({
                     });
                   }}
                   placeholder="100 gm, 250 gm, 500 gm, 1 kg, 5 kg"
-                  className="w-full bg-[#f4efe6] dark:bg-stone-900/60 border border-[#e4ded3] dark:border-stone-800 rounded-2xl px-4 py-2.5 text-stone-800 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-[#d4af37] transition-all"
+                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#d4af37] transition-all"
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#ece6d9] dark:border-stone-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-6 py-2.5 rounded-2xl bg-[#ece8df] dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:bg-[#e2ded5] dark:hover:bg-stone-700 border border-[#ded8cc]/70 dark:border-stone-700 font-medium text-xs sm:text-sm transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-muted border border-border text-foreground hover:bg-muted/80 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-2xl bg-[#c59a27] hover:bg-[#d8a82b] text-stone-950 font-bold uppercase tracking-wider text-xs shadow-md shadow-black/10 transition-all active:scale-95 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b89528] hover:from-[#e5bf45] hover:to-[#cfa832] text-stone-900 font-bold uppercase tracking-wider text-xs shadow-md shadow-black/20 transition-all active:scale-95 cursor-pointer"
                 >
                   SAVE CHANGES
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Inspect Modal */}
+      {inspectingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in">
+          <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto text-foreground">
+            <div className="flex items-start justify-between pb-4 border-b border-border mb-6">
+              <div>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  Product Overview
+                </span>
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2 mt-0.5">
+                  <span>{inspectingProduct.name}</span>
+                </h3>
+                <p className="text-[11px] font-mono text-muted-foreground mt-0.5">
+                  SKU / ID: {inspectingProduct.id}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setInspectingProduct(null)}
+                className="w-8 h-8 rounded-lg bg-muted text-foreground hover:bg-accent flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Product Image & Main Specs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+              <div className="sm:col-span-1 bg-muted/60 border border-border rounded-2xl p-4 flex items-center justify-center aspect-square relative overflow-hidden">
+                {getStaticSrc(
+                  inspectingProduct.imageUrl || inspectingProduct.image,
+                  "",
+                ) ? (
+                  <img
+                    src={getStaticSrc(
+                      inspectingProduct.imageUrl || inspectingProduct.image,
+                      "",
+                    )}
+                    alt={inspectingProduct.imageAlt || inspectingProduct.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <ShoppingBag className="w-12 h-12 text-muted-foreground" />
+                )}
+              </div>
+
+              <div className="sm:col-span-2 space-y-4 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold border ${getGradeBadgeStyle(
+                      inspectingProduct.grade,
+                    )}`}
+                  >
+                    {inspectingProduct.grade || "Grade"}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-muted border border-border text-foreground">
+                    Diameter: {inspectingProduct.diameterSpec || "Standard"}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold border ${getInventoryBadge(
+                      inspectingProduct.inventoryStatus ===
+                        "Out of Stock (Sold Out)" ||
+                        !inspectingProduct.inStock ||
+                        inspectingProduct.badge === "Sold Out",
+                      inspectingProduct.badge || "In Stock",
+                    )}`}
+                  >
+                    {inspectingProduct.badge ||
+                      inspectingProduct.inventoryStatus ||
+                      "In Stock"}
+                  </span>
+                </div>
+
+                <div className="bg-muted p-4 rounded-2xl border border-border">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">
+                    Live Pricing
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-foreground">
+                      ₹
+                      {(
+                        inspectingProduct.sellingPrice ??
+                        inspectingProduct.price ??
+                        0
+                      ).toLocaleString("en-IN")}
+                    </span>
+                    {inspectingProduct.originalPrice &&
+                      inspectingProduct.originalPrice >
+                        (inspectingProduct.sellingPrice ??
+                          inspectingProduct.price ??
+                          0) && (
+                        <span className="text-sm text-muted-foreground line-through">
+                          ₹
+                          {inspectingProduct.originalPrice.toLocaleString(
+                            "en-IN",
+                          )}
+                        </span>
+                      )}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">
+                    Description
+                  </span>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {inspectingProduct.description || "No description provided."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Weights & Packaging Details */}
+            <div className="bg-muted rounded-2xl p-4 border border-border mb-6 text-xs">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-2">
+                Available Packaging Sizes
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  inspectingProduct.availableWeights ||
+                  inspectingProduct.weights || [
+                    inspectingProduct.defaultWeight || "100 gm",
+                  ]
+                ).map((w) => (
+                  <span
+                    key={w}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                      w ===
+                      (inspectingProduct.defaultWeight ||
+                        inspectingProduct.weight ||
+                        "100 gm")
+                        ? "bg-[#d4af37] text-stone-900 font-bold"
+                        : "bg-card border border-border text-foreground"
+                    }`}
+                  >
+                    {w}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const p = inspectingProduct;
+                  setInspectingProduct(null);
+                  handleOpenEdit(p);
+                }}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b89528] hover:from-[#e5bf45] hover:to-[#cfa832] text-stone-900 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                <span>Edit This Product</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInspectingProduct(null)}
+                className="px-5 py-2 rounded-xl bg-muted border border-border text-foreground text-xs font-semibold hover:bg-muted/80 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
